@@ -43,7 +43,7 @@ class Updater:
         return (self.cfg.get("update_repo") or "").strip().strip("/")
 
     def _get(self, url, **kw):
-        h = {"Accept": "application/vnd.github+json", "User-Agent": "jarvis-updater"}
+        h = kw.pop("headers", None) or {"Accept": "application/vnd.github+json", "User-Agent": "jarvis-updater"}
         return requests.get(url, headers=h, timeout=kw.pop("timeout", 15), **kw)
 
     def _changelog(self, text, cur, latest):
@@ -71,8 +71,17 @@ class Updater:
             return info
         branch = (self.cfg.get("update_branch") or "main").strip()
         raw = f"https://raw.githubusercontent.com/{self.repo}/{branch}"
+        api = f"https://api.github.com/repos/{self.repo}/contents"
+
+        def fetch(name):
+            # API отвечает сразу (CDN raw.githubusercontent кэширует до 5 мин); лимит API — 60 запросов в час
+            r = self._get(f"{api}/{name}?ref={branch}", headers={"Accept": "application/vnd.github.raw+json",
+                                                                 "User-Agent": "jarvis-updater"})
+            if r.status_code in (403, 429):
+                r = self._get(f"{raw}/{name}")
+            return r
         try:
-            r = self._get(f"{raw}/VERSION?t={int(time.time())}")
+            r = fetch("VERSION")
             if r.status_code == 404:
                 info["error"] = "в репозитории ещё нет файла VERSION"
             else:
@@ -82,7 +91,7 @@ class Updater:
                             url=f"https://github.com/{self.repo}", zip=f"https://codeload.github.com/{self.repo}/zip/refs/heads/{branch}")
                 if info["available"]:
                     try:
-                        cl = self._get(f"{raw}/CHANGELOG.md?t={int(time.time())}")
+                        cl = fetch("CHANGELOG.md")
                         if cl.ok:
                             info["notes"] = self._changelog(cl.text, cur, latest)
                     except Exception:
