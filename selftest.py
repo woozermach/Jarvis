@@ -348,7 +348,8 @@ def t_license(tb):
     assert r.get("error") == "pro_only", r
     from core.assistant import build_prompt
     p = build_prompt({"persona": "tutor"}, "сейчас", pro=False)
-    assert "репетитор" not in p.lower().split("особые")[0] and "бесплатная версия" in p
+    assert "терпеливый репетитор" not in p and "дворецкий" in p and "бесплатная версия" in p, "в бесплатной версии включился характер Pro"
+    assert "терпеливый репетитор" in build_prompt({"persona": "tutor"}, "сейчас", pro=True)
     lic = License(cfg)
     out.append(f"бесплатная версия блокирует {len(PRO_TOOLS)} функций; сейчас: {'Pro' if lic.pro else 'бесплатная'} {lic.info().get('name', '')}")
     return True, "; ".join(out)
