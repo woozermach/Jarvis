@@ -468,7 +468,7 @@ function renderUpdate(u) {
   $("#ver").textContent = "v" + u.current;
   $("#fUpd").classList.toggle("hidden", !u.available); $("#fUpdV").textContent = u.latest || "";
   $("#updInstall").classList.toggle("hidden", !u.available);
-  $("#updTitle").textContent = `Версия ${u.current}`;
+  $("#updTitle").innerHTML = `Версия ${esc(u.current)}` + (u.url ? ` <a class="mut" href="${esc(u.url)}" target="_blank">github.com/${esc(u.repo || "")}</a>` : "");
   const when = u.checked ? new Date(u.checked * 1000).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" }) : "";
   $("#updState").textContent = u.available ? `— доступна ${u.latest} (${u.published || ""})` : u.error ? `— ${u.error}` : u.checked ? `— последняя (проверено в ${when})` : "";
   $("#updNotes").innerHTML = u.available && u.notes ? `<b>Что нового в ${esc(u.latest)}:</b>` + md(u.notes) : "";

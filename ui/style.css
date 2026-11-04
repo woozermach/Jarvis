@@ -311,3 +311,4 @@ body.no-sys.no-wx main{grid-template-columns:1fr}
 .btn.primary{color:#04121c;background:#4ff0a6;border-color:#4ff0a6;font-weight:600}
 .btn.primary:hover{background:#7ff5c0}
 .btn.hidden{display:none}
+.upd-box a.mut{font-size:12px;margin-left:8px;text-decoration:underline}
