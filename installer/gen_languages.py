@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 inno = Path(sys.argv[1] if len(sys.argv) > 1 else r"C:\Program Files (x86)\Inno Setup 6")
 MSG = {  # имя в Inno: (файл, «удалить данные?», «запустить»)
     "russian": ("Russian", "Удалить также настройки и данные Sayro (ключ API, заметки, память, историю)?", "Запустить Sayro"),
