@@ -1,0 +1,10 @@
+aiohttp>=3.9
+requests
+numpy
+sounddevice>=0.4.6
+psutil
+Pillow
+pycaw
+comtypes
+pystray
+openwakeword>=0.6

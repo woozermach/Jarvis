@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>J.A.R.V.I.S.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%234fe3ff' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='11' fill='%239ff3ff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/ui/style.css">
+</head>
+<body>
+<div id="bg"></div>
+<div id="app">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 40 40" class="logo"><circle cx="20" cy="20" r="16"/><circle cx="20" cy="20" r="9"/><path d="M20 2v6M20 32v6M2 20h6M32 20h6"/></svg>
+      <div><b>J.A.R.V.I.S.</b><small>Just A Rather Very Intelligent System · <span id="ver">v2</span></small></div>
+    </div>
+    <div class="chip" id="chip"><i></i><span id="chipText">ЗАГРУЗКА</span></div>
+    <div class="flags">
+      <button class="flag upd hidden" id="fUpd" title="Установить новую версию">⬆ ОБНОВИТЬ ДО <span id="fUpdV"></span></button>
+      <button class="flag hidden" id="fWatch" title="Джарвис видит экран — нажмите, чтобы выключить">👁 ВИЖУ ЭКРАН</button>
+      <button class="flag hidden" id="fQuiet" title="Тихий режим — нажмите, чтобы выключить">🔕 <span id="fQuietT">ТИХО</span></button>
+      <span class="flag dim hidden" id="fGame" title="Видеокарта нагружена — похоже, идёт игра">🎮 <span id="fGameT"></span></span>
+      <span class="flag dim hidden" id="fTg" title="Telegram-бот на связи">📱</span>
+    </div>
+    <div class="clock"><b id="clock">--:--</b><small id="date"></small></div>
+    <div class="hdr-btns">
+      <button class="icon" id="micBtn" title="Микрофон"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="icon" id="setBtn" title="Настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="col left">
+      <section class="panel" id="sysPanel">
+        <h3><span>СИСТЕМА</span><em id="gpuName"></em></h3>
+        <div class="gauges">
+          <div class="gauge" data-k="cpu"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40"/><circle class="val" cx="50" cy="50" r="40"/></svg><b>0</b><small>ЦП</small></div>
+          <div class="gauge" data-k="gpu"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40"/><circle class="val" cx="50" cy="50" r="40"/></svg><b>0</b><small>ГП</small></div>
+          <div class="gauge" data-k="ram"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40"/><circle class="val" cx="50" cy="50" r="40"/></svg><b>0</b><small>ОЗУ</small></div>
+        </div>
+        <div class="rows">
+          <div class="row"><span>Температура ГП</span><b id="gpuTemp">—</b></div>
+          <div class="row"><span>Видеопамять</span><b id="vram">—</b></div>
+          <div class="row"><span>Память</span><b id="ramAbs">—</b></div>
+          <div class="row"><span>Батарея</span><b id="bat">—</b></div>
+          <div class="bar"><i id="batBar"></i></div>
+          <div class="row"><span>Диск C: свободно</span><b id="disk">—</b></div>
+          <div class="row"><span>Сеть ↓ / ↑</span><b id="net">—</b></div>
+          <div class="row"><span>Без перезагрузки</span><b id="uptime">—</b></div>
+        </div>
+      </section>
+      <section class="panel" id="audioPanel">
+        <h3><span>АУДИО</span><em id="wakeEng"></em></h3>
+        <div class="meter"><label>Микрофон</label><div class="mbar"><i id="inBar"></i></div></div>
+        <div class="meter"><label>«Эй, Джарвис»</label><div class="mbar wake"><i id="wakeBar"></i><s id="wakeThr"></s></div></div>
+        <div class="meter"><label>Голос</label><div class="mbar out"><i id="outBar"></i></div></div>
+        <div class="rows small">
+          <div class="row"><span>Модель</span><b id="modelName">—</b></div>
+          <div class="row"><span>Голос</span><b id="voiceName">—</b></div>
+          <div class="row"><span>Горячая клавиша</span><b id="hotkey">Ctrl+Alt+J</b></div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="center">
+      <div class="reactor-wrap" id="reactorWrap" title="Нажмите, чтобы говорить">
+        <canvas id="reactor"></canvas>
+        <div class="state-label"><b id="stateText">ЗАГРУЗКА</b><small id="stateHint"></small></div>
+      </div>
+      <div class="chat" id="chat"></div>
+      <form class="input" id="form" autocomplete="off">
+        <span class="prompt">›</span>
+        <input id="text" placeholder="Напишите Джарвису…  или скажите «Эй, Джарвис»" maxlength="2000">
+        <button type="button" class="icon ghost" id="stopBtn" title="Остановить"><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg></button>
+        <button type="submit" class="icon send" title="Отправить"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg></button>
+      </form>
+    </section>
+
+    <aside class="col right">
+      <section class="panel" id="wxPanel">
+        <h3><span>ПОГОДА</span><em id="wxCity">—</em></h3>
+        <div class="wx-now">
+          <div class="wx-ico" id="wxIco"></div>
+          <div><b id="wxTemp">—</b><small id="wxDesc"></small></div>
+        </div>
+        <div class="rows small">
+          <div class="row"><span>Ощущается</span><b id="wxFeels">—</b></div>
+          <div class="row"><span>Ветер · влажность</span><b id="wxWind">—</b></div>
+          <div class="row"><span>Восход · закат</span><b id="wxSun">—</b></div>
+        </div>
+        <div class="wx-days" id="wxDays"></div>
+      </section>
+      <section class="panel" id="timerPanel">
+        <h3><span>ТАЙМЕРЫ</span><em id="timerCount"></em></h3>
+        <div class="list" id="timers"><div class="empty">Скажите: «поставь таймер на 10 минут»</div></div>
+      </section>
+      <section class="panel grow" id="taskPanel">
+        <h3><span>ЗАДАЧИ</span><em id="taskCount"></em></h3>
+        <div class="list" id="tasks"></div>
+        <form id="taskForm" class="task-add"><input id="taskText" placeholder="+ добавить задачу" maxlength="200"></form>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<div id="toasts"></div>
+
+<div id="card" class="overlay hidden">
+  <div class="card-box">
+    <div class="card-head"><b id="cardTitle"></b><div><button class="txt" id="cardCopy">копировать</button><button class="icon ghost" id="cardClose">✕</button></div></div>
+    <div class="card-body md" id="cardBody"></div>
+  </div>
+</div>
+
+<div id="alert" class="overlay hidden">
+  <div class="alert-box"><small id="alertKind">ТАЙМЕР</small><b id="alertText"></b><button id="alertOk">ПОНЯЛ</button></div>
+</div>
+
+<div id="shutdown" class="banner hidden"><span id="sdText"></span><button id="sdCancel">ОТМЕНА</button></div>
+
+<div id="settings" class="overlay hidden">
+  <div class="set-box">
+    <nav class="set-nav">
+      <b>НАСТРОЙКИ</b>
+      <button data-tab="main" class="on">Основное</button>
+      <button data-tab="voice">Голос и характер</button>
+      <button data-tab="wake">Активация</button>
+      <button data-tab="sound">Звук</button>
+      <button data-tab="tools">Возможности</button>
+      <button data-tab="routines">Режимы</button>
+      <button data-tab="proactive">Проактивность</button>
+      <button data-tab="games">Игры и экран</button>
+      <button data-tab="phone">Телефон</button>
+      <button data-tab="apps">Программы</button>
+      <button data-tab="memory">Память</button>
+      <button data-tab="ai">ИИ и ключ</button>
+      <button data-tab="diag">Диагностика</button>
+    </nav>
+    <div class="set-main">
+      <div class="set-head"><b id="setTitle">Основное</b><button class="icon ghost" id="setClose">✕</button></div>
+      <div class="set-body">
+
+        <section class="tab on" data-tab="main">
+          <div class="grid2">
+            <label class="fld"><span>Как к вам обращаться</span><input id="s_user_name" placeholder="сэр"></label>
+            <label class="fld"><span>Ваш город (для погоды)</span><input id="s_city" placeholder="Жилина"></label>
+          </div>
+          <label class="tgl"><input type="checkbox" id="s_open_window_on_start"><i></i><span>Открывать окно при запуске</span></label>
+          <label class="tgl"><input type="checkbox" id="s_autostart"><i></i><span>Запускать Джарвиса вместе с Windows</span></label>
+          <label class="tgl sub"><input type="checkbox" id="s_autostart_window"><i></i><span>…и сразу показывать окно (иначе — тихо в трее)</span></label>
+          <label class="tgl"><input type="checkbox" id="s_sounds"><i></i><span>Звуки интерфейса (сигналы начала и конца разговора)</span></label>
+          <label class="tgl"><input type="checkbox" id="s_show_system_panel"><i></i><span>Показывать панели «Система» и «Аудио»</span></label>
+          <label class="tgl"><input type="checkbox" id="s_show_weather_panel"><i></i><span>Показывать погоду, таймеры и задачи</span></label>
+          <label class="fld"><span>Закрывать карточки автоматически через, сек <em id="v_card_autoclose"></em></span>
+            <input type="range" id="s_card_autoclose" min="0" max="180" step="5"><small>0 — не закрывать (закроет Джарвис, когда скажете «закрой», или кнопка ✕).</small></label>
+          <div class="fld"><span>Цвет интерфейса</span><div class="swatches" id="swatches"></div></div>
+        </section>
+
+        <section class="tab" data-tab="voice">
+          <label class="fld"><span>Голос</span><div class="hrow"><select id="s_voice"></select><button class="btn" id="sTest">▶ проверить</button></div>
+            <small>Новый голос включается со следующего разговора.</small></label>
+          <div class="fld"><span>Характер</span><div class="cards" id="personaCards"></div></div>
+          <div class="fld"><span>Длина ответов</span><div class="seg" id="seg_reply_length">
+            <button data-v="short">Коротко</button><button data-v="normal">Обычно</button><button data-v="detailed">Подробно</button></div></div>
+          <label class="fld"><span>Язык ответов</span><select id="s_reply_language">
+            <option value="auto">Как говорю я</option><option value="ru">Русский</option><option value="uk">Українська</option>
+            <option value="en">English</option><option value="sk">Slovenčina</option></select></label>
+          <label class="fld"><span>Свои инструкции для Джарвиса</span>
+            <textarea id="s_custom_instructions" rows="6" placeholder="Например: «Называй меня Арсений. Шути про водный транспорт. Когда спрашиваю про математику — объясняй пошагово.»"></textarea>
+            <small>Джарвис будет соблюдать это в каждом разговоре.</small></label>
+        </section>
+
+        <section class="tab" data-tab="wake">
+          <label class="fld"><span>Способ активации</span><select id="s_wake_engine">
+            <option value="auto">Авто: локальная модель + проверка речью (рекомендуется)</option>
+            <option value="openwakeword">Только локальная модель «Hey Jarvis»</option>
+            <option value="google">Только распознавание речи (любая фраза с «Джарвис»)</option>
+            <option value="off">Выключено — только горячая клавиша и клик</option></select></label>
+          <div class="meter big"><label>Сейчас слышу «Эй, Джарвис»</label><div class="mbar wake"><i id="setWakeBar"></i><s id="setWakeThr"></s></div></div>
+          <label class="fld"><span>Строгость «Эй, Джарвис» <em id="v_wake_threshold"></em></span>
+            <input type="range" id="s_wake_threshold" min="0.2" max="0.9" step="0.05"><small>Выше — меньше ложных срабатываний, ниже — реагирует охотнее.</small></label>
+          <label class="fld"><span>Чувствительность к простому «Джарвис» <em id="v_wake_verify_threshold"></em></span>
+            <input type="range" id="s_wake_verify_threshold" min="0" max="0.1" step="0.002"><small>0 — проверять каждую короткую фразу (чаще срабатывает, больше трафика).</small></label>
+          <label class="fld"><span>Горячая клавиша</span><div class="hrow"><input id="s_hotkey" readonly class="hotkey-in" title="Нажмите и введите сочетание">
+            <button class="btn" id="hkReset">сброс</button></div><small id="hkInfo">Кликните в поле и нажмите нужное сочетание (например Ctrl+Alt+J).</small></label>
+          <label class="fld"><span>Ждать продолжения разговора, сек <em id="v_idle_timeout"></em></span><input type="range" id="s_idle_timeout" min="5" max="60" step="1"></label>
+          <label class="fld"><span>Пауза перед ответом, мс <em id="v_vad_silence_ms"></em></span><input type="range" id="s_vad_silence_ms" min="300" max="2000" step="50">
+            <small>Если Джарвис перебивает на полуслове — увеличьте.</small></label>
+          <label class="tgl"><input type="checkbox" id="s_headphones_auto"><i></i><span>Определять гарнитуру автоматически <em id="hsInfo" class="mut"></em></span></label>
+          <label class="tgl"><input type="checkbox" id="s_headphones"><i></i><span>Я всегда в наушниках — можно перебивать Джарвиса обычной речью</span></label>
+        </section>
+
+        <section class="tab" data-tab="sound">
+          <label class="fld"><span>Микрофон</span><select id="s_mic_device"></select></label>
+          <div class="meter big"><label>Уровень микрофона</label><div class="mbar"><i id="setInBar"></i></div></div>
+          <label class="fld"><span>Усиление микрофона <em id="v_mic_gain"></em></span><input type="range" id="s_mic_gain" min="0.5" max="4" step="0.1"></label>
+          <label class="fld"><span>Динамики / наушники</span><div class="hrow"><select id="s_speaker_device"></select><button class="btn" id="sSnd">▶ звук</button></div></label>
+        </section>
+
+        <section class="tab" data-tab="tools">
+          <p class="hint">Что Джарвису разрешено делать на компьютере. Отключённые функции он не сможет вызвать.</p>
+          <div id="toolToggles" class="tgl-list"></div>
+          <label class="tgl"><input type="checkbox" id="s_confirm_dangerous"><i></i><span>Спрашивать подтверждение перед выключением, корзиной и кнопками «купить/удалить»</span></label>
+        </section>
+
+        <section class="tab" data-tab="routines">
+          <p class="hint">Режим — набор действий по одной фразе. Проще всего создать голосом:
+            «Джарвис, создай игровой режим: открой Steam и Discord, громкость 40, включи тихий режим». Запуск — «включи игровой режим».</p>
+          <div id="routineList" class="routines"></div>
+          <details class="rt-new"><summary>+ создать режим вручную</summary>
+            <div class="grid2"><label class="fld"><span>Название</span><input id="rtName" placeholder="Учёба"></label>
+              <label class="fld"><span>Описание</span><input id="rtDesc" placeholder="закрыть игры, открыть Teams"></label></div>
+            <div id="rtSteps" class="rt-steps"></div>
+            <div class="hrow"><select id="rtTool"></select><button class="btn" id="rtAddStep">+ шаг</button><button class="btn" id="rtSave">Сохранить режим</button></div>
+            <small class="mut">У каждого шага — функция и её параметры. Пауза: функция «wait», параметр seconds.</small>
+          </details>
+          <div class="fld"><span>Тихий режим</span><div class="hrow"><span id="quietInfo" class="mut">выключен</span>
+            <button class="btn" data-quiet="60">на 1 час</button><button class="btn" data-quiet="180">на 3 часа</button><button class="btn" data-quiet="0">выключить</button></div>
+            <small>В тихом режиме Джарвис сам не заговаривает — предупреждения приходят значком (и в Telegram). Будильники и таймеры работают.</small></div>
+        </section>
+
+        <section class="tab" data-tab="proactive">
+          <label class="tgl"><input type="checkbox" id="s_proactive"><i></i><span>Сам сообщать о важном (перегрев, батарея, место, долгая игра)</span></label>
+          <label class="tgl sub"><input type="checkbox" id="s_proactive_voice"><i></i><span>…голосом (иначе только уведомлением)</span></label>
+          <label class="fld"><span>Перегрев видеокарты, °C <em id="v_proactive_gpu_temp"></em></span><input type="range" id="s_proactive_gpu_temp" min="70" max="100" step="1"></label>
+          <label class="fld"><span>Батарея ниже, % <em id="v_proactive_battery"></em></span><input type="range" id="s_proactive_battery" min="5" max="40" step="1"></label>
+          <label class="fld"><span>Мало места на диске, ГБ <em id="v_proactive_disk_gb"></em></span><input type="range" id="s_proactive_disk_gb" min="0" max="60" step="1"></label>
+          <label class="fld"><span>Предложить перерыв после игры, ч <em id="v_proactive_game_hours"></em></span><input type="range" id="s_proactive_game_hours" min="0" max="6" step="0.5">
+            <small>0 — не напоминать. Игра определяется по нагрузке на видеокарту.</small></label>
+          <label class="tgl"><input type="checkbox" id="s_proactive_night"><i></i><span>Мягко напоминать о сне, если играю после часа ночи</span></label>
+          <label class="tgl"><input type="checkbox" id="s_morning_briefing"><i></i><span>Утренний брифинг: при первом разговоре утром — погода, задачи и напоминания на день</span></label>
+        </section>
+
+        <section class="tab" data-tab="games">
+          <p class="hint"><b>«Вижу экран».</b> Скажите «смотри на экран» или «следи за игрой» — Джарвис будет видеть экран всё время разговора
+            и подсказывать по ходу: в игре, в коде, в задаче (с характером «Репетитор» — пошагово). Кнопка 👁 вверху выключает режим.</p>
+          <div class="hrow"><button class="btn" id="watchOn">👁 Включить сейчас</button></div>
+          <label class="fld"><span>Кадр экрана каждые, сек <em id="v_watch_interval"></em></span><input type="range" id="s_watch_interval" min="1" max="6" step="0.5">
+            <small>Чаще — точнее реагирует, но быстрее тратит лимит Gemini.</small></label>
+          <label class="fld"><span>Ждать в тишине в этом режиме, сек <em id="v_watch_idle_timeout"></em></span><input type="range" id="s_watch_idle_timeout" min="20" max="300" step="10"></label>
+          <label class="fld"><span>Клипы («сохрани момент»)</span><select id="s_clip_method">
+            <option value="auto">Авто: NVIDIA, если запущено приложение NVIDIA, иначе Xbox Game Bar</option>
+            <option value="nvidia">NVIDIA Instant Replay (Alt+F10)</option><option value="gamebar">Xbox Game Bar (Win+Alt+G)</option></select>
+            <small>В NVIDIA app нужно включить «Мгновенный повтор», в Game Bar — «Записывать в фоновом режиме».</small></label>
+          <div class="grid2">
+            <label class="fld"><span>Discord: горячая клавиша микрофона</span><input id="s_discord_mute_key" placeholder="ctrl+shift+f9"></label>
+            <label class="fld"><span>Discord: горячая клавиша звука</span><input id="s_discord_deafen_key" placeholder="ctrl+shift+f10"></label>
+          </div>
+          <small class="mut">Назначьте эти же сочетания в Discord → Настройки → Горячие клавиши («Вкл./выкл. микрофон», «Вкл./выкл. звук»). Тогда работает «выключи микрофон в дискорде».</small>
+        </section>
+
+        <section class="tab" data-tab="phone">
+          <p class="hint">Управляйте ноутбуком из Telegram: пишите или отправляйте голосовые — «что на экране», «поставь таймер на 20 минут»,
+            «выключи комп». Сюда же приходят таймеры и предупреждения.</p>
+          <ol class="steps">
+            <li>Откройте в Telegram <a href="https://t.me/BotFather" target="_blank">@BotFather</a>, отправьте <code>/newbot</code>, придумайте имя.</li>
+            <li>Скопируйте токен (вида <code>123456:ABC…</code>) и вставьте ниже, включите переключатель и сохраните.</li>
+            <li>Откройте своего бота и отправьте ему код привязки — он появится здесь.</li>
+          </ol>
+          <label class="tgl"><input type="checkbox" id="s_telegram_enabled"><i></i><span>Telegram-бот включён</span></label>
+          <label class="fld"><span>Токен бота</span><input id="sTgToken" type="password" placeholder="вставьте токен (сохранённый скрыт)"><small id="tgTokInfo"></small></label>
+          <div class="tg-status" id="tgStatus">—</div>
+          <label class="tgl"><input type="checkbox" id="s_telegram_notify"><i></i><span>Присылать таймеры, напоминания и предупреждения</span></label>
+          <div class="hrow"><button class="btn" id="tgTest">Отправить проверку</button><button class="btn danger" id="tgUnlink">Отвязать телефон</button></div>
+        </section>
+
+        <section class="tab" data-tab="apps">
+          <p class="hint">Джарвис сам находит программы из меню «Пуск» (<b id="appsCount">0</b>). Если что-то не находит — добавьте сюда своё название и путь к .exe, ярлыку, папке или сайту.</p>
+          <div id="appsTable" class="apps-table"></div>
+          <button class="btn" id="appAdd">+ добавить</button>
+          <label class="fld" style="margin-top:14px"><span>Проверить: что откроется по названию</span>
+            <div class="hrow"><input id="appTest" placeholder="например: калда"><button class="btn" id="appTestBtn">проверить</button></div><small id="appTestRes"></small></label>
+        </section>
+
+        <section class="tab" data-tab="memory">
+          <div class="fld"><span>Что Джарвис помнит о вас</span><div class="list" id="memList"></div>
+            <div class="hrow"><input id="memNew" placeholder="Добавить факт, например: «пары по вторникам с 8:00»"><button class="btn" id="memAdd">+</button></div></div>
+          <div class="fld"><span>Заметки</span><div class="list" id="noteList"></div></div>
+          <div class="hrow"><button class="btn danger" id="memClear">Забыть всё о себе</button><button class="btn" id="histClear">Очистить историю разговоров</button></div>
+        </section>
+
+        <section class="tab" data-tab="ai">
+          <label class="fld"><span>Ключ Gemini API</span>
+            <div class="hrow"><input id="sKey" type="password" placeholder="вставьте новый ключ (сохранённый скрыт)"><a href="https://aistudio.google.com/apikey" target="_blank" class="btn">получить ключ</a></div>
+            <small id="sKeyInfo"></small></label>
+          <label class="fld"><span>Голосовая модель (Live)</span><select id="s_live_model"></select></label>
+          <label class="fld"><span>Модель для зрения и поиска</span><select id="s_text_model"></select></label>
+          <p class="hint">«Авто» — Джарвис сам выбирает лучшую доступную и переключается, если модель перегружена.</p>
+        </section>
+
+        <section class="tab" data-tab="diag">
+          <div class="upd-box" id="updBox">
+            <div class="hrow"><b id="updTitle">Обновления</b><span class="mut" id="updState"></span></div>
+            <div class="md small" id="updNotes"></div>
+            <div class="hrow wrap"><button class="btn" id="updCheck">Проверить обновления</button>
+              <button class="btn primary hidden" id="updInstall">⬆ Обновить</button></div>
+            <label class="tgl"><input type="checkbox" id="s_update_auto_check"><i></i><span>Проверять обновления автоматически (раз в 6 часов)</span></label>
+            <small class="mut">Ваши настройки, ключи, память и история при обновлении не трогаются. Перед установкой делается копия старой версии; если новая не запустится — Джарвис сам вернёт прежнюю.</small>
+          </div>
+          <div class="info" id="sInfo"></div>
+          <div class="hrow wrap">
+            <button class="btn" id="dQuick">Быстрая самопроверка</button>
+            <button class="btn" id="dFull">Полная самопроверка</button>
+            <button class="btn" data-open="log">Открыть лог</button>
+            <button class="btn" data-open="folder">Папка Джарвиса</button>
+            <button class="btn" data-open="screenshots">Скриншоты</button>
+            <button class="btn" id="dRestart">Перезапустить</button>
+            <button class="btn danger" id="dQuit">Выключить Джарвиса</button>
+          </div>
+          <pre class="console" id="dOut"></pre>
+        </section>
+      </div>
+      <div class="set-foot"><span id="setDirty"></span><button id="setSave">СОХРАНИТЬ</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="boot" class="boot">
+  <div class="boot-box">
+    <div class="boot-ring"></div>
+    <pre id="bootLog"></pre>
+  </div>
+</div>
+
+<script src="/ui/app.js"></script>
+</body>
+</html>

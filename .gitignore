@@ -1,0 +1,12 @@
+# секреты и личные данные — не коммитить
+config.json
+data/
+jarvis.log
+jarvis.log.*
+CLAUDE.local.md
+
+# окружение и мусор
+.venv/
+__pycache__/
+*.pyc
+py/
