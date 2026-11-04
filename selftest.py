@@ -249,7 +249,7 @@ def t_cfg():
         pass
     from core.assistant import build_prompt
     p = build_prompt({"user_name": "Арсений", "persona": "friend", "reply_length": "detailed", "custom_instructions": "Шути"}, "сейчас")
-    return "Арсений" in p and "Шути" in p and "развёрнуто" in p, f"prompt {len(p)} симв."
+    return "Арсений" in p and "Шути" in p and "thoroughly" in p and "Sayro" in p, f"prompt {len(p)} симв."
 
 
 @step("режимы: создать → запустить → удалить")
@@ -290,7 +290,7 @@ def t_prompt2():
     from core.assistant import build_prompt
     p = build_prompt({"user_name": "Арсений", "persona": "tutor"}, "сейчас", routines="- Сохранённые режимы: «Игровой»\n",
                      briefing="- УТРЕННИЙ БРИФИНГ: тест\n")
-    return "репетитор" in p and "«Игровой»" in p and "БРИФИНГ" in p, f"{len(p)} симв."
+    return "patient tutor" in p and "«Игровой»" in p and "БРИФИНГ" in p, f"{len(p)} симв."
 
 
 @step("Telegram: агент с инструментами (без Telegram, только Gemini)")
@@ -348,8 +348,8 @@ def t_license(tb):
     assert r.get("error") == "pro_only", r
     from core.assistant import build_prompt
     p = build_prompt({"persona": "tutor"}, "сейчас", pro=False)
-    assert "терпеливый репетитор" not in p and "дворецкий" in p and "бесплатная версия" in p, "в бесплатной версии включился характер Pro"
-    assert "терпеливый репетитор" in build_prompt({"persona": "tutor"}, "сейчас", pro=True)
+    assert "patient tutor" not in p and "butler" in p and "free version" in p, "в бесплатной версии включился характер Pro"
+    assert "patient tutor" in build_prompt({"persona": "tutor"}, "сейчас", pro=True)
     lic = License(cfg)
     out.append(f"бесплатная версия блокирует {len(PRO_TOOLS)} функций; сейчас: {'Pro' if lic.pro else 'бесплатная'} {lic.info().get('name', '')}")
     return True, "; ".join(out)
@@ -593,6 +593,11 @@ def main():
             rec("LIVE " + k, good, json.dumps(v, ensure_ascii=False))
         tb.t_routine_delete("Самотест два")
         ctx.store.cancel_timer(label="провер")
+        return
+    if ONLY == "i18n":
+        import runpy
+        sys.argv = [sys.argv[0]]
+        runpy.run_path(str(BASE / "tools" / "translate_i18n.py"), run_name="__main__")
         return
     if ONLY == "update":
         ctx = FakeCtx()

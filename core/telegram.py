@@ -27,11 +27,11 @@ TG_NOTE = """
 - Выключение/перезагрузку — только после явного «да» в переписке (confirmed=true).
 - Не говори, что что-то сделал, если не вызвал функцию."""
 
-HELP = ("Я Джарвис — твой ноутбук на связи.\n\n"
-        "Просто пиши (или отправляй голосовые), что сделать: «включи музыку», «сколько заряда», «поставь таймер на 20 минут», "
-        "«что сейчас на экране», «выключи комп через час», «запусти игровой режим».\n\n"
-        "Команды:\n/screen — снимок экрана\n/status — состояние ноутбука\n/quiet — тихий режим на час\n"
-        "/update — обновить Джарвиса\n/clear — забыть переписку\n/help — эта справка")
+def L(ctx, key, **kw):
+    """Строка бота на языке интерфейса."""
+    from .brand import name as brand_name
+    from .i18n import ui
+    return ui("py." + key, ctx.lang, name=brand_name(ctx.lang), **kw)
 
 
 class TelegramBot:
@@ -161,25 +161,25 @@ class TelegramBot:
                 self.cfg["telegram_chat_id"] = chat
                 self.cfg.save()
                 name = m.get("from", {}).get("first_name", "")
-                self.send(chat, f"✅ Привязано{', ' + name if name else ''}! Теперь я отвечаю только тебе.\n\n" + HELP)
+                self.send(chat, L(self.ctx, "tg_linked_msg", who=(", " + name) if name else "") + "\n\n" + L(self.ctx, "tg_help"))
                 self.ctx.toast("📱 Telegram привязан")
                 self.ctx.on_settings_changed()
             else:
-                self.send(chat, "Привет! Чтобы привязать меня, отправь код из настроек Джарвиса (вкладка «Телефон»).")
+                self.send(chat, L(self.ctx, "tg_hello"))
             return
         if chat != bound:
-            self.send(chat, "Этот Джарвис привязан к другому аккаунту.")
+            self.send(chat, L(self.ctx, "tg_other"))
             return
 
         cmd = text.split()[0].lower().split("@")[0] if text.startswith("/") else ""
         if cmd in ("/start", "/help"):
-            return self.send(chat, HELP)
+            return self.send(chat, L(self.ctx, "tg_help"))
         if cmd == "/clear":
             self.histories.pop(chat, None)
-            return self.send(chat, "Переписку забыл.")
+            return self.send(chat, L(self.ctx, "tg_cleared"))
         if cmd == "/quiet":
             self.ctx.tools.t_quiet_mode(60)
-            return self.send(chat, "🔕 Тихий режим на час.")
+            return self.send(chat, "🔕 " + L(self.ctx, "tg_quiet"))
         if cmd == "/screen":
             self._typing(chat, "upload_photo")
             return self.send_photo(chat, self._screen_jpeg(), "Экран сейчас")
@@ -189,11 +189,11 @@ class TelegramBot:
             i = self.ctx.updater.check()
             self.ctx.push_update()
             if not i.get("available"):
-                return self.send(chat, f"Версия {i['current']} — последняя." + (f" ({i['error']})" if i.get("error") else ""))
-            self.send(chat, f"⬆ Ставлю версию {i['latest']}, вернусь через полминуты…")
+                return self.send(chat, L(self.ctx, "tg_latest", v=i["current"]) + (f" ({i['error']})" if i.get("error") else ""))
+            self.send(chat, "⬆ " + L(self.ctx, "tg_updating", v=i["latest"]))
             res = self.ctx.updater.install()
             if res.get("error"):
-                self.send(chat, "Не вышло: " + res["error"])
+                self.send(chat, "⚠ " + res["error"])
             return
 
         parts = []
@@ -212,7 +212,7 @@ class TelegramBot:
             parts.append({"text": text})
             shown = text
         else:
-            return self.send(chat, "Понимаю текст, голосовые и фото.")
+            return self.send(chat, L(self.ctx, "tg_kinds"))
         self.ctx._threadsafe({"t": "msg", "role": "user", "text": "📱 " + shown, "id": f"tg{m['message_id']}", "final": True})
         self._typing(chat)
         reply = self.agent(chat, parts)
@@ -266,10 +266,10 @@ class TelegramBot:
         n = dt.datetime.now()
         now = f"{WEEKDAYS[n.weekday()]}, {n.day} {MONTHS_GEN[n.month - 1]} {n.year}, {n:%H:%M}"
         facts = [x["fact"] for x in self.ctx.store.snapshot()["memory"]]
-        memory = ("- Что ты знаешь о пользователе:\n" + "\n".join(f"  • {f}" for f in facts[-40:]) + "\n") if facts else ""
+        memory = ("- What you know about the user:\n" + "\n".join(f"  • {f}" for f in facts[-40:]) + "\n") if facts else ""
         rs = self.ctx.store.snapshot()["routines"]
-        routines = ("- Сохранённые режимы: " + ", ".join(f"«{r['name']}»" for r in rs) + "\n") if rs else ""
-        return build_prompt(self.cfg, now, memory, "", routines) + TG_NOTE
+        routines = ("- Saved routines: " + ", ".join(f"«{r['name']}»" for r in rs) + "\n") if rs else ""
+        return build_prompt(self.cfg, now, memory, "", routines, pro=self.ctx.pro) + TG_NOTE
 
     def agent(self, chat, parts):
         hist = self.histories.setdefault(chat, [])

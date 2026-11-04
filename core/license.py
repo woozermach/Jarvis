@@ -24,6 +24,8 @@ BUY_URL = ""              # ссылка на страницу товара, н�
 RECHECK = 3 * 86400
 GRACE = 14 * 86400
 STATE = DATA_DIR / "license.json"
+TRIAL = DATA_DIR / "trial.json"
+TRIAL_DAYS = 7
 
 PRO_FEATURES = {
     "telegram": "Telegram-бот: управление с телефона и уведомления",
@@ -75,12 +77,27 @@ class License:
                 self.state = {}
         if self.state.get("key") != (cfg.get("license_key") or "").strip():
             self.state = {}
+        self.trial_started = 0.0
+        try:
+            self.trial_started = float(json.loads(TRIAL.read_text(encoding="utf-8")).get("started", 0))
+        except Exception:
+            pass
+        if not self.trial_started:  # первый запуск — 7 дней Pro бесплатно
+            self.trial_started = time.time()
+            try:
+                TRIAL.write_text(json.dumps({"started": self.trial_started}), encoding="utf-8")
+            except Exception:
+                pass
+
+    @property
+    def trial_left(self):
+        return max(0.0, self.trial_started + TRIAL_DAYS * 86400 - time.time())
 
     def _save(self):
         STATE.write_text(json.dumps(self.state, ensure_ascii=False), encoding="utf-8")
 
     @property
-    def pro(self):
+    def licensed(self):
         s = self.state
         if not s.get("ok"):
             return False
@@ -88,9 +105,15 @@ class License:
             return not s.get("expires") or time.time() < s["expires"]
         return time.time() - s.get("verified", 0) < GRACE
 
+    @property
+    def pro(self):
+        return self.licensed or self.trial_left > 0
+
     def info(self):
         s = self.state
-        return {"pro": self.pro, "kind": s.get("kind", ""), "name": s.get("name", ""), "error": s.get("error", ""),
+        trial = not self.licensed and self.trial_left > 0
+        return {"pro": self.pro, "kind": "trial" if trial else s.get("kind", ""), "name": s.get("name", ""), "error": s.get("error", ""),
+                "trial_days_left": int(self.trial_left // 86400) + (1 if self.trial_left % 86400 else 0),
                 "expires": s.get("expires", 0), "verified": s.get("verified", 0), "has_key": bool(s.get("key")),
                 "buy_url": BUY_URL, "features": PRO_FEATURES}
 

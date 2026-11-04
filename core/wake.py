@@ -21,8 +21,15 @@ from collections import deque
 import numpy as np
 
 log = logging.getLogger("jarvis.wake")
-WAKE_RE = re.compile(r"(?:дж|ж|ч|д)[аеэ]р?[вб][иы]с|jarvis|джарви", re.I)
-STRIP_RE = re.compile(r"^.*?(?:" + WAKE_RE.pattern + r")\w*[\s,.!?:;-]*", re.I)
+from .brand import wake_re
+
+WAKE_RE = wake_re("jarvis")  # для совместимости (selftest)
+STT_LANG = {"ru": "ru-RU", "uk": "uk-UA", "en": "en-US", "de": "de-DE", "fr": "fr-FR", "es": "es-ES", "it": "it-IT",
+            "pl": "pl-PL", "sk": "sk-SK", "cs": "cs-CZ"}
+
+
+def strip_re(rx):
+    return re.compile(r"^.*?(?:" + rx.pattern + r")\w*[\s,.!?:;-]*", re.I)
 
 
 def _stub_sklearn_dependency():
@@ -53,9 +60,14 @@ class Wake:
         self.verify_ok = False
         self.stats = {"fast": 0, "verified": 0, "rejected": 0}
 
+        self.word = cfg.get("wake_word", "sayro")
+        self.rx = wake_re(self.word)
+        self.strip = strip_re(self.rx)
         eng = cfg.get("wake_engine", "auto")
+        if self.word != "jarvis" and eng in ("auto", "openwakeword"):
+            eng = "google"  # локальной модели для этого имени пока нет — только распознавание речи
         if eng == "off":
-            self.status = "выключено"
+            self.status = "off"
             return
         if eng in ("auto", "openwakeword"):
             self._init_oww()
@@ -63,9 +75,10 @@ class Wake:
         threading.Thread(target=self._verify_worker, daemon=True, name="wake-verify").start()
         if self.engine == "off" and self.verify_ok:
             self.engine = "google"
-            self.status = "по распознаванию речи (openWakeWord недоступен)"
+            self.status = (f"speech recognition · “{self.word}”" if eng == "google"
+                           else "speech recognition (on-device model unavailable)")
         elif self.engine == "openwakeword":
-            self.status = "локально (openWakeWord)" + (" + проверка речи" if self.verify_ok else "")
+            self.status = "on-device (openWakeWord)" + (" + speech check" if self.verify_ok else "")
         log.info("Wake: %s — %s", self.engine, self.status)
 
     def _init_oww(self):
@@ -116,6 +129,7 @@ class Wake:
                     self._cand = None
                     self._silent = 0
         elif self.engine == "google":
+            self.score = 0.0
             # без модели: каждую короткую фразу проверяем распознаванием
             if is_voice:
                 self._seg.append(frame); self._voiced += 1; self._silent = 0
@@ -145,13 +159,18 @@ class Wake:
             self._busy = True
             try:
                 from .stt import transcribe
-                text = transcribe(pcm, (self.cfg.get("gemini_api_key") or "").strip())
+                lang = self.cfg.get("ui_language") or "en"
+                text = transcribe(pcm, (self.cfg.get("gemini_api_key") or "").strip(), STT_LANG.get(lang, "en-US"))
+                if not (text and self.rx.search(text)) and lang != "en":
+                    # имя часто распознаётся как английское слово — второй шанс
+                    t2 = transcribe(pcm, "", "en-US") if self.word != "jarvis" else ""
+                    text = t2 if t2 and self.rx.search(t2) else text
             except Exception:
                 text = ""
             finally:
                 self._busy = False
-            if text and WAKE_RE.search(text):
-                rest = STRIP_RE.sub("", text, count=1).strip(" ,.!?")
+            if text and self.rx.search(text):
+                rest = self.strip.sub("", text, count=1).strip(" ,.!?")
                 self.stats["verified"] += 1
                 log.info("Wake (проверено речью): «%s» → команда «%s»", text, rest)
                 self._fire(rest or None, self.score)

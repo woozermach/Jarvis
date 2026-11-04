@@ -5,6 +5,7 @@ import logging
 import os
 import subprocess
 import threading
+import time
 import webbrowser
 from pathlib import Path
 
@@ -23,9 +24,36 @@ def _edge_path():
     return None
 
 
+def _close_legacy_windows():
+    """Окна интерфейса старых версий (до 3.0) не умеют перезагружаться после обновления — закрываем их."""
+    if not IS_WIN:
+        return 0
+    from ctypes import wintypes
+    u = ctypes.windll.user32
+    found = []
+    PROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+    def cb(h, _):
+        n = u.GetWindowTextLengthW(h)
+        if n:
+            b = ctypes.create_unicode_buffer(n + 1)
+            u.GetWindowTextW(h, b, n + 1)
+            if b.value.startswith("J.A.R.V.I.S"):
+                found.append(h)
+        return True
+    u.EnumWindows(PROC(cb), 0)
+    for h in found:
+        u.PostMessageW(h, 0x0010, 0, 0)  # WM_CLOSE
+    if found:
+        time.sleep(1.2)
+    return len(found)
+
+
 def open_window(port):
     global _proc
     url = f"http://127.0.0.1:{port}/"
+    if IS_WIN:
+        _close_legacy_windows()
     if IS_WIN and _find_hwnd():  # окно уже открыто (например, после перезапуска) — просто показать
         focus_window(port)
         return
@@ -57,7 +85,8 @@ def _find_hwnd():
         if n:
             b = ctypes.create_unicode_buffer(n + 1)
             u.GetWindowTextW(h, b, n + 1)
-            if b.value.startswith("J.A.R.V.I.S"):
+            from .brand import WINDOW_TITLE
+            if b.value.startswith(WINDOW_TITLE) or b.value.startswith("J.A.R.V.I.S"):
                 found.append(h)
         return True
     u.EnumWindows(PROC(cb), 0)
@@ -168,7 +197,12 @@ def _startup_dir():
 def set_autostart(enabled: bool):
     if not IS_WIN:
         return False
-    lnk = _startup_dir() / "J.A.R.V.I.S..lnk"
+    from .brand import NAME
+    lnk = _startup_dir() / f"{NAME}.lnk"
+    try:  # ярлык старого имени
+        (_startup_dir() / "J.A.R.V.I.S..lnk").unlink()
+    except OSError:
+        pass
     if not enabled:
         try:
             lnk.unlink()
@@ -185,7 +219,8 @@ def set_autostart(enabled: bool):
 
 def autostart_enabled():
     try:
-        return (_startup_dir() / "J.A.R.V.I.S..lnk").exists()
+        from .brand import NAME
+        return (_startup_dir() / f"{NAME}.lnk").exists() or (_startup_dir() / "J.A.R.V.I.S..lnk").exists()
     except Exception:
         return False
 
@@ -207,8 +242,13 @@ def _icon_image():
     s = 64
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.ellipse((4, 4, s - 4, s - 4), outline=(80, 220, 255, 255), width=5)
-    d.ellipse((20, 20, s - 20, s - 20), fill=(120, 235, 255, 255))
+    # светящийся шар: от фиолетового края к светлому блику слева сверху
+    for i in range(29):
+        t = i / 28                       # 0 — край, 1 — блик
+        r = 29 - i
+        cx, cy = 32 - t * 8, 32 - t * 9
+        col = (int(107 + (228 - 107) * t), int(69 + (244 - 69) * t), 255, 255)
+        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=col)
     return img
 
 
@@ -230,10 +270,13 @@ def start_tray(assistant):
         icon.stop()
         os._exit(0)
 
+    from .brand import APP_ID, name as brand_name
+    from .i18n import ui as uistr
+    lang = assistant.lang
     menu = pystray.Menu(
-        pystray.MenuItem("Открыть Джарвиса", show, default=True),
-        pystray.MenuItem("Микрофон", toggle_mic, checked=lambda item: assistant.mic_enabled),
-        pystray.MenuItem("Выход", quit_),
+        pystray.MenuItem(uistr("py.tray_open", lang, name=brand_name(lang)), show, default=True),
+        pystray.MenuItem(uistr("sys.mic", lang), toggle_mic, checked=lambda item: assistant.mic_enabled),
+        pystray.MenuItem(uistr("py.tray_quit", lang), quit_),
     )
-    icon = pystray.Icon("jarvis", _icon_image(), "J.A.R.V.I.S.", menu)
+    icon = pystray.Icon(APP_ID, _icon_image(), brand_name(lang), menu)
     threading.Thread(target=icon.run, daemon=True, name="tray").start()

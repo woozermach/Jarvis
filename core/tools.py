@@ -623,10 +623,10 @@ class Toolbox:
         import math
         home = getattr(self, "_home", None)
         if home is None and city.strip().lower() != (self.cfg.get("city") or "").strip().lower():
-            self._home = home = self._geocode(self.cfg.get("city") or "Жилина") or {}
+            self._home = home = (self._geocode(self.cfg.get("city")) if self.cfg.get("city") else None) or {}
         for v in self._city_variants(city):
             r = requests.get("https://geocoding-api.open-meteo.com/v1/search",
-                             params={"name": v, "count": 10, "language": "ru"}, timeout=10)
+                             params={"name": v, "count": 10, "language": self.cfg.get("ui_language") or "en"}, timeout=10)
             res = (r.json() or {}).get("results") or []
             if not res:
                 continue
@@ -647,7 +647,9 @@ class Toolbox:
         return None
 
     def weather_data(self, city=None, days=4):
-        city = (city or self.cfg.get("city") or "Жилина").strip()
+        city = (city or self.cfg.get("city") or "").strip()
+        if not city:
+            raise ValueError("город не задан")
         key = (city.lower(), days)
         hit = self._weather_cache.get(key)
         if hit and time.time() - hit[0] < 600:
@@ -664,10 +666,11 @@ class Toolbox:
         cur, day = j["current"], j["daily"]
         data = {
             "city": loc.get("name", city), "country": loc.get("country", ""),
-            "now": {"temp": round(cur["temperature_2m"]), "feels": round(cur["apparent_temperature"]),
+            "now": {"temp": round(cur["temperature_2m"]), "feels": round(cur["apparent_temperature"]), "code": int(cur["weather_code"]),
                     "desc": WEATHER_CODES.get(int(cur["weather_code"]), ""), "icon": WEATHER_ICON.get(int(cur["weather_code"]), "cloud"),
                     "wind": round(cur["wind_speed_10m"]), "humidity": cur.get("relative_humidity_2m"), "is_day": cur.get("is_day", 1)},
             "days": [{"date": day["time"][i], "max": round(day["temperature_2m_max"][i]), "min": round(day["temperature_2m_min"][i]),
+                      "code": int(day["weather_code"][i]),
                       "rain": day["precipitation_probability_max"][i], "desc": WEATHER_CODES.get(int(day["weather_code"][i]), ""),
                       "icon": WEATHER_ICON.get(int(day["weather_code"][i]), "cloud")} for i in range(len(day["time"]))],
             "sunrise": day["sunrise"][0][-5:], "sunset": day["sunset"][0][-5:],

@@ -64,8 +64,12 @@ DEFAULTS = {
     "reply_length": "short",     # short | normal | detailed
     "reply_language": "auto",    # auto | ru | uk | en | sk
     # о пользователе
-    "user_name": "сэр",
-    "city": "Жилина",
+    "user_name": "",
+    "city": "",
+    "ui_language": "",           # en de fr es it pl cs sk uk ru; пусто — язык Windows
+    "theme": "dark",             # system | light | dark
+    "onboarding_done": False,
+    "wake_word": "sayro",        # sayro | jarvis
     # активация
     "wake_engine": "auto",       # auto | openwakeword | google | off
     "wake_threshold": 0.5,       # уверенное срабатывание локальной модели
@@ -84,7 +88,7 @@ DEFAULTS = {
     "open_window_on_start": True,
     "autostart": False,
     "autostart_window": False,
-    "accent": "#4fe3ff",
+    "accent": "#0A84FF",
     "show_system_panel": True,
     "show_weather_panel": True,
     "card_autoclose": 0,         # сек до автозакрытия карточек (0 — не закрывать)
@@ -124,8 +128,11 @@ DEFAULTS = {
 SCHEMA = {
     "voice": ("choice", list(VOICES)), "persona": ("choice", list(PERSONAS)),
     "reply_length": ("choice", ["short", "normal", "detailed"]),
-    "reply_language": ("choice", ["auto", "ru", "uk", "en", "sk"]),
+    "reply_language": ("choice", ["auto", "en", "de", "fr", "es", "it", "pl", "cs", "sk", "uk", "ru"]),
     "wake_engine": ("choice", ["auto", "openwakeword", "google", "off"]),
+    "ui_language": ("choice", ["en", "de", "fr", "es", "it", "pl", "cs", "sk", "uk", "ru"]),
+    "theme": ("choice", ["system", "light", "dark"]), "onboarding_done": ("bool",),
+    "wake_word": ("choice", ["sayro", "jarvis"]),
     "custom_instructions": ("str", 4000), "user_name": ("str", 60), "city": ("str", 80), "hotkey": ("str", 40),
     "live_model": ("str", 80), "text_model": ("str", 80), "tts_model": ("str", 80), "accent": ("str", 9),
     "wake_threshold": ("float", 0.1, 0.95), "wake_verify_threshold": ("float", 0.0, 0.3),
@@ -174,13 +181,31 @@ def coerce(key, value):
     return value
 
 
+def windows_language():
+    """Язык интерфейса Windows → один из поддерживаемых (иначе английский)."""
+    supported = {"en", "de", "fr", "es", "it", "pl", "cs", "sk", "uk", "ru"}
+    try:
+        if IS_WIN:
+            import ctypes
+            import locale
+            lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
+            code = (locale.windows_locale.get(lcid) or "en_US").split("_")[0].lower()
+        else:
+            import locale
+            code = (locale.getlocale()[0] or "en").split("_")[0].lower()
+        return code if code in supported else "en"
+    except Exception:
+        return "en"
+
+
 _lock = threading.Lock()
 
 
 class Config(dict):
     def __init__(self):
         super().__init__(DEFAULTS)
-        if CONFIG_PATH.exists():
+        existed = CONFIG_PATH.exists()
+        if existed:
             try:
                 old = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
                 for k, v in old.items():
@@ -190,6 +215,13 @@ class Config(dict):
                 logging.getLogger("jarvis").error("config.json повреждён: %s", e)
         if self.get("voice") not in VOICES:  # миграция с v1 (голоса edge-tts)
             self["voice"] = "Charon"
+        if not self.get("ui_language"):
+            # старые установки (до 3.0) были на русском; новые — язык Windows
+            self["ui_language"] = "ru" if existed and self.get("gemini_api_key") else windows_language()
+            if existed and self.get("gemini_api_key"):
+                self["onboarding_done"] = True
+        if (self.get("accent") or "").lower() == "#4fe3ff":
+            self["accent"] = DEFAULTS["accent"]
         if self.get("update_repo") in ("woozermach/jarvis-assistant", ""):  # первое имя репозитория
             self["update_repo"] = DEFAULTS["update_repo"]
         if not self.get("gemini_api_key") and os.environ.get("GEMINI_API_KEY"):

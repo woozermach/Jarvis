@@ -1,348 +1,378 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>J.A.R.V.I.S.</title>
+<title>Sayro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%234fe3ff' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='11' fill='%239ff3ff'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.36' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23E4F4FF'/%3E%3Cstop offset='.3' stop-color='%237CC4FF'/%3E%3Cstop offset='.65' stop-color='%233D7BFF'/%3E%3Cstop offset='1' stop-color='%236B45FF'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/ui/style.css">
 </head>
-<body>
-<div id="bg"></div>
+<body data-theme="dark" class="free">
 <div id="app">
-  <header>
+  <header class="top">
     <div class="brand">
-      <svg viewBox="0 0 40 40" class="logo"><circle cx="20" cy="20" r="16"/><circle cx="20" cy="20" r="9"/><path d="M20 2v6M20 32v6M2 20h6M32 20h6"/></svg>
-      <div><b>J.A.R.V.I.S.<em class="pro-badge hidden" id="proBadge">PRO</em></b><small>Just A Rather Very Intelligent System · <span id="ver">v2</span></small></div>
+      <span class="mark" aria-hidden="true"></span>
+      <b id="brandName">Sayro</b>
+      <em class="pro-badge hidden" id="proBadge">PRO</em>
     </div>
-    <div class="chip" id="chip"><i></i><span id="chipText">ЗАГРУЗКА</span></div>
     <div class="flags">
-      <button class="flag upd hidden" id="fUpd" title="Установить новую версию">⬆ ОБНОВИТЬ ДО <span id="fUpdV"></span></button>
-      <button class="flag hidden" id="fWatch" title="Джарвис видит экран — нажмите, чтобы выключить">👁 ВИЖУ ЭКРАН</button>
-      <button class="flag hidden" id="fQuiet" title="Тихий режим — нажмите, чтобы выключить">🔕 <span id="fQuietT">ТИХО</span></button>
-      <span class="flag dim hidden" id="fGame" title="Видеокарта нагружена — похоже, идёт игра">🎮 <span id="fGameT"></span></span>
-      <span class="flag dim hidden" id="fTg" title="Telegram-бот на связи">📱</span>
+      <button class="flag upd hidden" id="fUpd"><span data-i18n="flag.update">Update to</span> <span id="fUpdV"></span></button>
+      <button class="flag warn hidden" id="fWatch" data-i18n-title="flag.watch_off"><span data-i18n="flag.watching">Seeing your screen</span></button>
+      <button class="flag hidden" id="fQuiet" data-i18n-title="flag.quiet_off"><span data-i18n="flag.quiet">Quiet until</span> <span id="fQuietT"></span></button>
+      <span class="flag dim hidden" id="fGame" data-i18n-title="flag.game_hint"><span data-i18n="flag.gaming">Gaming</span> <span id="fGameT"></span></span>
+      <span class="flag dim hidden" id="fTg" data-i18n="flag.phone">Phone linked</span>
     </div>
-    <div class="clock"><b id="clock">--:--</b><small id="date"></small></div>
-    <div class="hdr-btns">
-      <button class="icon" id="micBtn" title="Микрофон"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-      <button class="icon" id="setBtn" title="Настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
-    </div>
+    <div class="spacer"></div>
+    <div class="status" id="statusPill"><i></i><span id="chipText">Loading</span></div>
+    <button class="round" id="micBtn" data-i18n-title="btn.mic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+    <button class="round" id="setBtn" data-i18n-title="btn.settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
   </header>
 
   <main>
-    <aside class="col left">
-      <section class="panel" id="sysPanel">
-        <h3><span>СИСТЕМА</span><em id="gpuName"></em></h3>
-        <div class="gauges">
-          <div class="gauge" data-k="cpu"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40"/><circle class="val" cx="50" cy="50" r="40"/></svg><b>0</b><small>ЦП</small></div>
-          <div class="gauge" data-k="gpu"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40"/><circle class="val" cx="50" cy="50" r="40"/></svg><b>0</b><small>ГП</small></div>
-          <div class="gauge" data-k="ram"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40"/><circle class="val" cx="50" cy="50" r="40"/></svg><b>0</b><small>ОЗУ</small></div>
-        </div>
-        <div class="rows">
-          <div class="row"><span>Температура ГП</span><b id="gpuTemp">—</b></div>
-          <div class="row"><span>Видеопамять</span><b id="vram">—</b></div>
-          <div class="row"><span>Память</span><b id="ramAbs">—</b></div>
-          <div class="row"><span>Батарея</span><b id="bat">—</b></div>
-          <div class="bar"><i id="batBar"></i></div>
-          <div class="row"><span>Диск C: свободно</span><b id="disk">—</b></div>
-          <div class="row"><span>Сеть ↓ / ↑</span><b id="net">—</b></div>
-          <div class="row"><span>Без перезагрузки</span><b id="uptime">—</b></div>
-        </div>
-      </section>
-      <section class="panel" id="audioPanel">
-        <h3><span>АУДИО</span><em id="wakeEng"></em></h3>
-        <div class="meter"><label>Микрофон</label><div class="mbar"><i id="inBar"></i></div></div>
-        <div class="meter"><label>«Эй, Джарвис»</label><div class="mbar wake"><i id="wakeBar"></i><s id="wakeThr"></s></div></div>
-        <div class="meter"><label>Голос</label><div class="mbar out"><i id="outBar"></i></div></div>
-        <div class="rows small">
-          <div class="row"><span>Модель</span><b id="modelName">—</b></div>
-          <div class="row"><span>Голос</span><b id="voiceName">—</b></div>
-          <div class="row"><span>Горячая клавиша</span><b id="hotkey">Ctrl+Alt+J</b></div>
-        </div>
-      </section>
-    </aside>
-
-    <section class="center">
-      <div class="reactor-wrap" id="reactorWrap" title="Нажмите, чтобы говорить">
-        <canvas id="reactor"></canvas>
-        <div class="state-label"><b id="stateText">ЗАГРУЗКА</b><small id="stateHint"></small></div>
+    <section class="stage">
+      <div class="orb-wrap" id="orbWrap" data-i18n-title="orb.click">
+        <div class="ring r1"></div><div class="ring r2"></div>
+        <div class="orb" id="orb"></div>
+      </div>
+      <div class="state-text">
+        <b id="stateText">Loading</b>
+        <small id="stateHint"></small>
       </div>
       <div class="chat" id="chat"></div>
-      <form class="input" id="form" autocomplete="off">
-        <span class="prompt">›</span>
-        <input id="text" placeholder="Напишите Джарвису…  или скажите «Эй, Джарвис»" maxlength="2000">
-        <button type="button" class="icon ghost" id="stopBtn" title="Остановить"><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg></button>
-        <button type="submit" class="icon send" title="Отправить"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg></button>
+      <form class="ask" id="form" autocomplete="off">
+        <input id="text" data-i18n-ph="ask.placeholder" placeholder="Ask anything, or just talk" maxlength="2000" aria-label="Message">
+        <button type="button" class="round ghost" id="stopBtn" data-i18n-title="btn.stop"><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></svg></button>
+        <button type="submit" class="round send" data-i18n-title="btn.send"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
       </form>
     </section>
 
-    <aside class="col right">
-      <section class="panel" id="wxPanel">
-        <h3><span>ПОГОДА</span><em id="wxCity">—</em></h3>
-        <div class="wx-now">
-          <div class="wx-ico" id="wxIco"></div>
-          <div><b id="wxTemp">—</b><small id="wxDesc"></small></div>
-        </div>
-        <div class="rows small">
-          <div class="row"><span>Ощущается</span><b id="wxFeels">—</b></div>
-          <div class="row"><span>Ветер · влажность</span><b id="wxWind">—</b></div>
-          <div class="row"><span>Восход · закат</span><b id="wxSun">—</b></div>
-        </div>
+    <aside class="today">
+      <div class="today-h" data-i18n="today.title">Today</div>
+      <section class="card" id="wxPanel">
+        <div class="wx-now"><div class="wx-ico" id="wxIco"></div>
+          <div><b id="wxTemp">—</b><small id="wxDesc"></small></div></div>
         <div class="wx-days" id="wxDays"></div>
       </section>
-      <section class="panel" id="timerPanel">
-        <h3><span>ТАЙМЕРЫ</span><em id="timerCount"></em></h3>
-        <div class="list" id="timers"><div class="empty">Скажите: «поставь таймер на 10 минут»</div></div>
+      <section class="card" id="timerPanel">
+        <div class="card-h"><span data-i18n="today.timers">Timers</span><em id="timerCount"></em></div>
+        <div class="list" id="timers"></div>
       </section>
-      <section class="panel grow" id="taskPanel">
-        <h3><span>ЗАДАЧИ</span><em id="taskCount"></em></h3>
+      <section class="card grow" id="taskPanel">
+        <div class="card-h"><span data-i18n="today.tasks">Tasks</span><em id="taskCount"></em></div>
         <div class="list" id="tasks"></div>
-        <form id="taskForm" class="task-add"><input id="taskText" placeholder="+ добавить задачу" maxlength="200"></form>
+        <form id="taskForm" class="task-add"><input id="taskText" data-i18n-ph="today.add_task" placeholder="Add a task" maxlength="200"></form>
+      </section>
+      <section class="card" id="sysPanel">
+        <div class="sys">
+          <div><b id="cpuV">—</b><small data-i18n="sys.cpu">CPU</small></div>
+          <div><b id="gpuV">—</b><small data-i18n="sys.gpu">GPU</small></div>
+          <div><b id="ramV">—</b><small data-i18n="sys.ram">Memory</small></div>
+          <div><b id="batV">—</b><small data-i18n="sys.battery">Battery</small></div>
+        </div>
+        <div class="meters">
+          <div class="mrow"><span data-i18n="sys.mic">Mic</span><div class="mbar"><i id="inBar"></i></div></div>
+          <div class="mrow"><span data-i18n="sys.voice">Voice</span><div class="mbar out"><i id="outBar"></i></div></div>
+        </div>
       </section>
     </aside>
   </main>
 </div>
 
-<div id="toasts"></div>
+<div id="toasts" aria-live="polite"></div>
 
 <div id="card" class="overlay hidden">
-  <div class="card-box">
-    <div class="card-head"><b id="cardTitle"></b><div><button class="txt" id="cardCopy">копировать</button><button class="icon ghost" id="cardClose">✕</button></div></div>
+  <div class="sheet card-box">
+    <div class="sheet-h"><b id="cardTitle"></b><div class="hrow"><button class="txt" id="cardCopy" data-i18n="btn.copy">Copy</button><button class="round sm" id="cardClose" data-i18n-title="btn.close">✕</button></div></div>
     <div class="card-body md" id="cardBody"></div>
   </div>
 </div>
 
 <div id="alert" class="overlay hidden">
-  <div class="alert-box"><small id="alertKind">ТАЙМЕР</small><b id="alertText"></b><button id="alertOk">ПОНЯЛ</button></div>
+  <div class="sheet alert-box"><small id="alertKind"></small><b id="alertText"></b><button class="btn primary" id="alertOk" data-i18n="btn.ok">OK</button></div>
 </div>
 
-<div id="shutdown" class="banner hidden"><span id="sdText"></span><button id="sdCancel">ОТМЕНА</button></div>
+<div id="shutdown" class="banner hidden"><span id="sdText"></span><button class="btn" id="sdCancel" data-i18n="btn.cancel">Cancel</button></div>
 
+<!-- ───────────── первый запуск ───────────── -->
+<div id="onb" class="overlay onb hidden">
+  <div class="sheet onb-box">
+    <div class="steps-bar" id="onbBar"><i></i><i></i><i></i><i></i></div>
+    <section class="onb-step" data-step="0">
+      <div class="onb-orb"></div>
+      <h1 data-i18n="onb.welcome">Meet Sayro</h1>
+      <p class="lead" data-i18n="onb.welcome_sub">Your voice for your PC. Open apps, see your screen, help in games and homework — just by talking.</p>
+      <label class="fld"><span data-i18n="onb.language">Language</span><select id="onbLang"></select></label>
+      <div class="grid2">
+        <label class="fld"><span data-i18n="set.user_name">What should Sayro call you</span><input id="onbName" data-i18n-ph="set.user_name_ph" placeholder="e.g. Alex"></label>
+        <label class="fld"><span data-i18n="set.city">Your city (for weather)</span><input id="onbCity" placeholder="London"></label>
+      </div>
+    </section>
+    <section class="onb-step" data-step="1">
+      <h1 data-i18n="onb.ai_title">Connect your AI</h1>
+      <p class="lead" data-i18n="onb.ai_sub">Sayro talks to Google Gemini. Pick how you want to pay for it — you can change this any time.</p>
+      <div class="choices" id="onbChoices">
+        <button class="choice on" data-v="pro"><i></i><span><b data-i18n="onb.c_pro">I have Google AI Pro</b><small data-i18n="onb.c_pro_d">Use the monthly Google Cloud credits that come with your subscription. Nothing extra to pay for AI.</small></span><em data-i18n="onb.recommended">Recommended</em></button>
+        <button class="choice" data-v="key"><i></i><span><b data-i18n="onb.c_key">Use my own Gemini key</b><small data-i18n="onb.c_key_d">Pay Google directly for what you use — roughly $1 per hour of talking. A free tier exists outside the EU.</small></span><em data-i18n="onb.payg">Pay as you go</em></button>
+        <button class="choice" data-v="cloud" disabled><i></i><span><b data-i18n="onb.c_cloud">Sayro Cloud</b><small data-i18n="onb.c_cloud_d">Everything included in one subscription, no Google account needed.</small></span><em data-i18n="onb.soon">Coming soon</em></button>
+      </div>
+    </section>
+    <section class="onb-step" data-step="2">
+      <h1 data-i18n="onb.key_title">Paste your Gemini key</h1>
+      <ol class="howto" id="onbHow"></ol>
+      <div class="hrow"><a class="btn" href="https://aistudio.google.com/apikey" target="_blank" data-i18n="onb.open_studio">Open Google AI Studio</a>
+        <a class="btn ghost" id="onbCreditsLink" href="https://developers.google.com/program/my-benefits" target="_blank" data-i18n="onb.open_credits">Activate AI Pro credits</a></div>
+      <label class="fld"><span data-i18n="onb.key">API key</span><input id="onbKey" type="password" placeholder="AIza…" autocomplete="off"></label>
+      <small class="mut" id="onbKeyInfo"></small>
+    </section>
+    <section class="onb-step" data-step="3">
+      <h1 data-i18n="onb.mic_title">Say hello</h1>
+      <p class="lead" data-i18n="onb.mic_sub">Check that Sayro hears you. Speak and watch the bar move.</p>
+      <div class="meter big"><div class="mbar"><i id="onbMic"></i></div></div>
+      <label class="fld"><span data-i18n="set.mic">Microphone</span><select id="onbMicDev"></select></label>
+      <div class="tip"><b data-i18n="onb.wake_tip_t">How to call Sayro</b><span data-i18n="onb.wake_tip">Say “Hey Sayro”, press Ctrl+Alt+J, or click the orb.</span></div>
+    </section>
+    <div class="onb-foot">
+      <button class="btn ghost" id="onbBack" data-i18n="btn.back">Back</button>
+      <span class="mut" id="onbErr"></span>
+      <button class="btn primary" id="onbNext" data-i18n="btn.continue">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────── настройки ───────────── -->
 <div id="settings" class="overlay hidden">
-  <div class="set-box">
-    <nav class="set-nav">
-      <b>НАСТРОЙКИ</b>
-      <button data-tab="pro" class="nav-pro">⭐ Pro</button>
-      <button data-tab="main" class="on">Основное</button>
-      <button data-tab="voice">Голос и характер</button>
-      <button data-tab="wake">Активация</button>
-      <button data-tab="sound">Звук</button>
-      <button data-tab="tools">Возможности</button>
-      <button data-tab="routines" class="lockable">Режимы</button>
-      <button data-tab="proactive" class="lockable">Проактивность</button>
-      <button data-tab="games">Игры и экран</button>
-      <button data-tab="phone" class="lockable">Телефон</button>
-      <button data-tab="apps">Программы</button>
-      <button data-tab="memory">Память</button>
-      <button data-tab="ai">ИИ и ключ</button>
-      <button data-tab="diag">Диагностика</button>
+  <div class="sheet set-box">
+    <nav class="set-nav" aria-label="Settings sections">
+      <b data-i18n="set.title">Settings</b>
+      <button data-tab="pro" class="nav-pro"><i style="--c:#FFD60A"></i><span data-i18n="tab.pro">Sayro Pro</span></button>
+      <button data-tab="main" class="on"><i style="--c:#8E8E93"></i><span data-i18n="tab.main">General</span></button>
+      <button data-tab="voice"><i style="--c:#0A84FF"></i><span data-i18n="tab.voice">Voice &amp; personality</span></button>
+      <button data-tab="wake"><i style="--c:#FF9F0A"></i><span data-i18n="tab.wake">Wake word &amp; hotkey</span></button>
+      <button data-tab="sound"><i style="--c:#FF375F"></i><span data-i18n="tab.sound">Sound</span></button>
+      <button data-tab="tools"><i style="--c:#5E5CE6"></i><span data-i18n="tab.tools">Abilities</span></button>
+      <button data-tab="routines" class="lockable"><i style="--c:#30D158"></i><span data-i18n="tab.routines">Routines</span></button>
+      <button data-tab="proactive" class="lockable"><i style="--c:#FF453A"></i><span data-i18n="tab.proactive">Proactive</span></button>
+      <button data-tab="games"><i style="--c:#BF5AF2"></i><span data-i18n="tab.games">Screen &amp; games</span></button>
+      <button data-tab="phone" class="lockable"><i style="--c:#64D2FF"></i><span data-i18n="tab.phone">Phone</span></button>
+      <button data-tab="apps"><i style="--c:#AC8E68"></i><span data-i18n="tab.apps">Apps</span></button>
+      <button data-tab="memory"><i style="--c:#FFD60A"></i><span data-i18n="tab.memory">Memory</span></button>
+      <button data-tab="ai"><i style="--c:#32ADE6"></i><span data-i18n="tab.ai">AI &amp; key</span></button>
+      <button data-tab="diag"><i style="--c:#636366"></i><span data-i18n="tab.diag">About &amp; updates</span></button>
     </nav>
     <div class="set-main">
-      <div class="set-head"><b id="setTitle">Основное</b><button class="icon ghost" id="setClose">✕</button></div>
+      <div class="set-head"><b id="setTitle">General</b><button class="round sm" id="setClose" data-i18n-title="btn.close">✕</button></div>
       <div class="set-body">
 
         <section class="tab" data-tab="pro">
-          <div class="pro-card" id="proCard">
-            <div class="pro-status" id="proStatus">Бесплатная версия</div>
-            <small class="mut" id="proSub"></small>
-          </div>
+          <div class="pro-card" id="proCard"><div class="pro-status" id="proStatus">Free version</div><small class="mut" id="proSub"></small></div>
           <div class="pro-cols">
-            <div><b>Бесплатно</b><ul>
-              <li>Голосовой разговор, «Эй, Джарвис», 10 голосов</li><li>Программы, окна, клавиши, клики по экрану</li>
-              <li>Поиск в интернете, YouTube, погода, курсы</li><li>Таймеры, будильники, задачи, заметки, память</li>
-              <li>Скриншот и вопрос по экрану, клипы игр, Discord</li><li>Обновления одной кнопкой</li></ul></div>
-            <div><b>⭐ Pro</b><ul id="proList"></ul></div>
+            <div class="group"><b data-i18n="pro.free_t">Free forever</b><ul>
+              <li data-i18n="pro.f1">Voice conversation, wake word, 10 voices</li><li data-i18n="pro.f2">Apps, windows, keys and clicks on screen</li>
+              <li data-i18n="pro.f3">Web search, YouTube, weather, currency</li><li data-i18n="pro.f4">Timers, alarms, tasks, notes, memory</li>
+              <li data-i18n="pro.f5">Ask about your screen, game clips, Discord</li><li data-i18n="pro.f6">One-click updates</li></ul></div>
+            <div class="group gold"><b data-i18n="pro.pro_t">Pro</b><ul>
+              <li data-i18n="pro.p1">Seeing your screen live + Tutor personality</li><li data-i18n="pro.p2">Routines in one phrase + quiet mode</li>
+              <li data-i18n="pro.p3">Proactive alerts + morning briefing</li><li data-i18n="pro.p4">Control your PC from your phone (Telegram)</li></ul></div>
           </div>
-          <div class="hrow"><a class="btn primary hidden" id="proBuy" target="_blank">Купить Pro</a><span class="mut" id="proNoShop">Магазин скоро откроется.</span></div>
-          <label class="fld"><span>Ключ лицензии</span>
-            <div class="hrow"><input id="licKey" placeholder="вставьте ключ из письма Gumroad или ключ PRO-…"><button class="btn" id="licAct">Активировать</button>
-              <button class="btn danger hidden" id="licDel">Удалить ключ</button></div>
+          <div class="price"><b>$4.99</b><span data-i18n="pro.per_month">per month · cancel any time</span></div>
+          <div class="hrow"><a class="btn primary hidden" id="proBuy" target="_blank" data-i18n="pro.buy">Get Pro</a><span class="mut" id="proNoShop" data-i18n="pro.no_shop">The store opens soon.</span></div>
+          <label class="fld"><span data-i18n="pro.key">License key</span>
+            <div class="hrow"><input id="licKey" data-i18n-ph="pro.key_ph" placeholder="Paste the key from your purchase e-mail"><button class="btn" id="licAct" data-i18n="pro.activate">Activate</button>
+              <button class="btn danger hidden" id="licDel" data-i18n="pro.remove">Remove key</button></div>
             <small id="licInfo" class="mut"></small></label>
         </section>
 
         <section class="tab on" data-tab="main">
           <div class="grid2">
-            <label class="fld"><span>Как к вам обращаться</span><input id="s_user_name" placeholder="сэр"></label>
-            <label class="fld"><span>Ваш город (для погоды)</span><input id="s_city" placeholder="Жилина"></label>
+            <label class="fld"><span data-i18n="set.user_name">What should Sayro call you</span><input id="s_user_name" data-i18n-ph="set.user_name_ph" placeholder="e.g. Alex"></label>
+            <label class="fld"><span data-i18n="set.city">Your city (for weather)</span><input id="s_city" placeholder="London"></label>
           </div>
-          <label class="tgl"><input type="checkbox" id="s_open_window_on_start"><i></i><span>Открывать окно при запуске</span></label>
-          <label class="tgl"><input type="checkbox" id="s_autostart"><i></i><span>Запускать Джарвиса вместе с Windows</span></label>
-          <label class="tgl sub"><input type="checkbox" id="s_autostart_window"><i></i><span>…и сразу показывать окно (иначе — тихо в трее)</span></label>
-          <label class="tgl"><input type="checkbox" id="s_sounds"><i></i><span>Звуки интерфейса (сигналы начала и конца разговора)</span></label>
-          <label class="tgl"><input type="checkbox" id="s_show_system_panel"><i></i><span>Показывать панели «Система» и «Аудио»</span></label>
-          <label class="tgl"><input type="checkbox" id="s_show_weather_panel"><i></i><span>Показывать погоду, таймеры и задачи</span></label>
-          <label class="fld"><span>Закрывать карточки автоматически через, сек <em id="v_card_autoclose"></em></span>
-            <input type="range" id="s_card_autoclose" min="0" max="180" step="5"><small>0 — не закрывать (закроет Джарвис, когда скажете «закрой», или кнопка ✕).</small></label>
-          <div class="fld"><span>Цвет интерфейса</span><div class="swatches" id="swatches"></div></div>
+          <div class="grid2">
+            <label class="fld"><span data-i18n="set.ui_language">Language</span><select id="s_ui_language"></select></label>
+            <div class="fld"><span data-i18n="set.theme">Appearance</span><div class="seg" id="seg_theme">
+              <button data-v="system" data-i18n="set.theme_system">Auto</button><button data-v="light" data-i18n="set.theme_light">Light</button><button data-v="dark" data-i18n="set.theme_dark">Dark</button></div></div>
+          </div>
+          <div class="group">
+            <label class="tgl"><span data-i18n="set.open_window">Open the window at launch</span><input type="checkbox" id="s_open_window_on_start"><i></i></label>
+            <label class="tgl"><span data-i18n="set.autostart">Start with Windows</span><input type="checkbox" id="s_autostart"><i></i></label>
+            <label class="tgl sub"><span data-i18n="set.autostart_window">…and show the window (otherwise quietly in the tray)</span><input type="checkbox" id="s_autostart_window"><i></i></label>
+            <label class="tgl"><span data-i18n="set.sounds">Interface sounds</span><input type="checkbox" id="s_sounds"><i></i></label>
+            <label class="tgl"><span data-i18n="set.show_system">Show system and audio</span><input type="checkbox" id="s_show_system_panel"><i></i></label>
+            <label class="tgl"><span data-i18n="set.show_today">Show weather, timers and tasks</span><input type="checkbox" id="s_show_weather_panel"><i></i></label>
+          </div>
+          <label class="fld"><span><span data-i18n="set.card_autoclose">Close cards automatically after, s</span> <em id="v_card_autoclose"></em></span>
+            <input type="range" id="s_card_autoclose" min="0" max="180" step="5"><small data-i18n="set.card_autoclose_h">0 — never (say “close” or press ✕).</small></label>
+          <div class="fld"><span data-i18n="set.accent">Accent colour</span><div class="swatches" id="swatches"></div></div>
         </section>
 
         <section class="tab" data-tab="voice">
-          <label class="fld"><span>Голос</span><div class="hrow"><select id="s_voice"></select><button class="btn" id="sTest">▶ проверить</button></div>
-            <small>Новый голос включается со следующего разговора.</small></label>
-          <div class="fld"><span>Характер</span><div class="cards" id="personaCards"></div></div>
-          <div class="fld"><span>Длина ответов</span><div class="seg" id="seg_reply_length">
-            <button data-v="short">Коротко</button><button data-v="normal">Обычно</button><button data-v="detailed">Подробно</button></div></div>
-          <label class="fld"><span>Язык ответов</span><select id="s_reply_language">
-            <option value="auto">Как говорю я</option><option value="ru">Русский</option><option value="uk">Українська</option>
-            <option value="en">English</option><option value="sk">Slovenčina</option></select></label>
-          <label class="fld"><span>Свои инструкции для Джарвиса</span>
-            <textarea id="s_custom_instructions" rows="6" placeholder="Например: «Называй меня Арсений. Шути про водный транспорт. Когда спрашиваю про математику — объясняй пошагово.»"></textarea>
-            <small>Джарвис будет соблюдать это в каждом разговоре.</small></label>
+          <label class="fld"><span data-i18n="set.voice">Voice</span><div class="hrow"><select id="s_voice"></select><button class="btn" id="sTest" data-i18n="btn.try">▶ Try</button></div>
+            <small data-i18n="set.voice_h">A new voice starts with the next conversation.</small></label>
+          <div class="fld"><span data-i18n="set.persona">Personality</span><div class="cards" id="personaCards"></div></div>
+          <div class="fld"><span data-i18n="set.reply_length">Reply length</span><div class="seg" id="seg_reply_length">
+            <button data-v="short" data-i18n="set.len_short">Short</button><button data-v="normal" data-i18n="set.len_normal">Normal</button><button data-v="detailed" data-i18n="set.len_detailed">Detailed</button></div></div>
+          <label class="fld"><span data-i18n="set.reply_language">Reply language</span><select id="s_reply_language"></select></label>
+          <label class="fld"><span data-i18n="set.custom">Your own instructions</span>
+            <textarea id="s_custom_instructions" rows="5" data-i18n-ph="set.custom_ph" placeholder="e.g. “Call me Alex. When I ask about maths, explain step by step.”"></textarea>
+            <small data-i18n="set.custom_h">Sayro follows this in every conversation.</small></label>
         </section>
 
         <section class="tab" data-tab="wake">
-          <label class="fld"><span>Способ активации</span><select id="s_wake_engine">
-            <option value="auto">Авто: локальная модель + проверка речью (рекомендуется)</option>
-            <option value="openwakeword">Только локальная модель «Hey Jarvis»</option>
-            <option value="google">Только распознавание речи (любая фраза с «Джарвис»)</option>
-            <option value="off">Выключено — только горячая клавиша и клик</option></select></label>
-          <div class="meter big"><label>Сейчас слышу «Эй, Джарвис»</label><div class="mbar wake"><i id="setWakeBar"></i><s id="setWakeThr"></s></div></div>
-          <label class="fld"><span>Строгость «Эй, Джарвис» <em id="v_wake_threshold"></em></span>
-            <input type="range" id="s_wake_threshold" min="0.2" max="0.9" step="0.05"><small>Выше — меньше ложных срабатываний, ниже — реагирует охотнее.</small></label>
-          <label class="fld"><span>Чувствительность к простому «Джарвис» <em id="v_wake_verify_threshold"></em></span>
-            <input type="range" id="s_wake_verify_threshold" min="0" max="0.1" step="0.002"><small>0 — проверять каждую короткую фразу (чаще срабатывает, больше трафика).</small></label>
-          <label class="fld"><span>Горячая клавиша</span><div class="hrow"><input id="s_hotkey" readonly class="hotkey-in" title="Нажмите и введите сочетание">
-            <button class="btn" id="hkReset">сброс</button></div><small id="hkInfo">Кликните в поле и нажмите нужное сочетание (например Ctrl+Alt+J).</small></label>
-          <label class="fld"><span>Ждать продолжения разговора, сек <em id="v_idle_timeout"></em></span><input type="range" id="s_idle_timeout" min="5" max="60" step="1"></label>
-          <label class="fld"><span>Пауза перед ответом, мс <em id="v_vad_silence_ms"></em></span><input type="range" id="s_vad_silence_ms" min="300" max="2000" step="50">
-            <small>Если Джарвис перебивает на полуслове — увеличьте.</small></label>
-          <label class="tgl"><input type="checkbox" id="s_headphones_auto"><i></i><span>Определять гарнитуру автоматически <em id="hsInfo" class="mut"></em></span></label>
-          <label class="tgl"><input type="checkbox" id="s_headphones"><i></i><span>Я всегда в наушниках — можно перебивать Джарвиса обычной речью</span></label>
+          <div class="grid2">
+            <label class="fld"><span data-i18n="set.wake_word">Wake word</span><select id="s_wake_word">
+              <option value="sayro">“Hey Sayro”</option><option value="jarvis">“Hey Jarvis”</option></select></label>
+            <label class="fld"><span data-i18n="set.wake_engine">How to listen</span><select id="s_wake_engine">
+              <option value="auto" data-i18n="set.we_auto">Automatic (recommended)</option>
+              <option value="openwakeword" data-i18n="set.we_local">On-device model only</option>
+              <option value="google" data-i18n="set.we_speech">Speech recognition</option>
+              <option value="off" data-i18n="set.we_off">Off — hotkey and click only</option></select></label>
+          </div>
+          <small class="mut" data-i18n="set.wake_h">“Hey Sayro” is recognised from short phrases by Google speech recognition. An on-device model is coming.</small>
+          <div class="meter big"><label data-i18n="set.wake_meter">Wake word confidence</label><div class="mbar wake"><i id="setWakeBar"></i><s id="setWakeThr"></s></div></div>
+          <label class="fld"><span><span data-i18n="set.wake_threshold">Strictness</span> <em id="v_wake_threshold"></em></span>
+            <input type="range" id="s_wake_threshold" min="0.2" max="0.9" step="0.05"><small data-i18n="set.wake_threshold_h">Higher — fewer false wakes; lower — reacts more easily.</small></label>
+          <label class="fld"><span><span data-i18n="set.wake_verify">Sensitivity to a short call</span> <em id="v_wake_verify_threshold"></em></span>
+            <input type="range" id="s_wake_verify_threshold" min="0" max="0.1" step="0.002"></label>
+          <label class="fld"><span data-i18n="set.hotkey">Hotkey</span><div class="hrow"><input id="s_hotkey" readonly class="hotkey-in">
+            <button class="btn" id="hkReset" data-i18n="btn.reset">Reset</button></div><small id="hkInfo"></small></label>
+          <label class="fld"><span><span data-i18n="set.idle">Keep listening after a reply, s</span> <em id="v_idle_timeout"></em></span><input type="range" id="s_idle_timeout" min="5" max="60" step="1"></label>
+          <label class="fld"><span><span data-i18n="set.vad">Pause before replying, ms</span> <em id="v_vad_silence_ms"></em></span><input type="range" id="s_vad_silence_ms" min="300" max="2000" step="50">
+            <small data-i18n="set.vad_h">If Sayro cuts you off mid-sentence — increase it.</small></label>
+          <div class="group">
+            <label class="tgl"><span><span data-i18n="set.headphones_auto">Detect a headset automatically</span> <em id="hsInfo" class="mut"></em></span><input type="checkbox" id="s_headphones_auto"><i></i></label>
+            <label class="tgl"><span data-i18n="set.headphones">I always use headphones — interrupt by just talking</span><input type="checkbox" id="s_headphones"><i></i></label>
+          </div>
         </section>
 
         <section class="tab" data-tab="sound">
-          <label class="fld"><span>Микрофон</span><select id="s_mic_device"></select></label>
-          <div class="meter big"><label>Уровень микрофона</label><div class="mbar"><i id="setInBar"></i></div></div>
-          <label class="fld"><span>Усиление микрофона <em id="v_mic_gain"></em></span><input type="range" id="s_mic_gain" min="0.5" max="4" step="0.1"></label>
-          <label class="fld"><span>Динамики / наушники</span><div class="hrow"><select id="s_speaker_device"></select><button class="btn" id="sSnd">▶ звук</button></div></label>
+          <label class="fld"><span data-i18n="set.mic">Microphone</span><select id="s_mic_device"></select></label>
+          <div class="meter big"><label data-i18n="set.mic_level">Microphone level</label><div class="mbar"><i id="setInBar"></i></div></div>
+          <label class="fld"><span><span data-i18n="set.mic_gain">Microphone gain</span> <em id="v_mic_gain"></em></span><input type="range" id="s_mic_gain" min="0.5" max="4" step="0.1"></label>
+          <label class="fld"><span data-i18n="set.speaker">Speakers / headphones</span><div class="hrow"><select id="s_speaker_device"></select><button class="btn" id="sSnd" data-i18n="btn.test_sound">▶ Sound</button></div></label>
         </section>
 
         <section class="tab" data-tab="tools">
-          <p class="hint">Что Джарвису разрешено делать на компьютере. Отключённые функции он не сможет вызвать.</p>
-          <div id="toolToggles" class="tgl-list"></div>
-          <label class="tgl"><input type="checkbox" id="s_confirm_dangerous"><i></i><span>Спрашивать подтверждение перед выключением, корзиной и кнопками «купить/удалить»</span></label>
+          <p class="hint" data-i18n="set.tools_h">What Sayro may do on your computer. Switched-off abilities cannot be used.</p>
+          <div id="toolToggles" class="group"></div>
+          <div class="group"><label class="tgl"><span data-i18n="set.confirm">Ask before shutdown, emptying the bin and “buy/delete” buttons</span><input type="checkbox" id="s_confirm_dangerous"><i></i></label></div>
         </section>
 
         <section class="tab" data-tab="routines">
-          <p class="hint">Режим — набор действий по одной фразе. Проще всего создать голосом:
-            «Джарвис, создай игровой режим: открой Steam и Discord, громкость 40, включи тихий режим». Запуск — «включи игровой режим».</p>
+          <p class="hint" data-i18n="rt.h">A routine is a set of actions you start with one phrase. The easiest way is to say: “Hey Sayro, create a gaming routine: open Steam and Discord, volume 40, quiet mode.” Then: “start the gaming routine”.</p>
           <div id="routineList" class="routines"></div>
-          <details class="rt-new"><summary>+ создать режим вручную</summary>
-            <div class="grid2"><label class="fld"><span>Название</span><input id="rtName" placeholder="Учёба"></label>
-              <label class="fld"><span>Описание</span><input id="rtDesc" placeholder="закрыть игры, открыть Teams"></label></div>
+          <details class="rt-new"><summary data-i18n="rt.manual">Create a routine manually</summary>
+            <div class="grid2"><label class="fld"><span data-i18n="rt.name">Name</span><input id="rtName" placeholder="Study"></label>
+              <label class="fld"><span data-i18n="rt.desc">Description</span><input id="rtDesc"></label></div>
             <div id="rtSteps" class="rt-steps"></div>
-            <div class="hrow"><select id="rtTool"></select><button class="btn" id="rtAddStep">+ шаг</button><button class="btn" id="rtSave">Сохранить режим</button></div>
-            <small class="mut">У каждого шага — функция и её параметры. Пауза: функция «wait», параметр seconds.</small>
+            <div class="hrow"><select id="rtTool"></select><button class="btn" id="rtAddStep" data-i18n="rt.add_step">+ Step</button><button class="btn primary" id="rtSave" data-i18n="rt.save">Save routine</button></div>
           </details>
-          <div class="fld"><span>Тихий режим</span><div class="hrow"><span id="quietInfo" class="mut">выключен</span>
-            <button class="btn" data-quiet="60">на 1 час</button><button class="btn" data-quiet="180">на 3 часа</button><button class="btn" data-quiet="0">выключить</button></div>
-            <small>В тихом режиме Джарвис сам не заговаривает — предупреждения приходят значком (и в Telegram). Будильники и таймеры работают.</small></div>
+          <div class="fld"><span data-i18n="rt.quiet">Quiet mode</span><div class="hrow"><span id="quietInfo" class="mut"></span>
+            <button class="btn" data-quiet="60" data-i18n="rt.q1">1 hour</button><button class="btn" data-quiet="180" data-i18n="rt.q3">3 hours</button><button class="btn" data-quiet="0" data-i18n="rt.qoff">Turn off</button></div>
+            <small data-i18n="rt.quiet_h">In quiet mode Sayro does not start talking on its own — alerts arrive as notifications. Alarms and timers still ring.</small></div>
         </section>
 
         <section class="tab" data-tab="proactive">
-          <label class="tgl"><input type="checkbox" id="s_proactive"><i></i><span>Сам сообщать о важном (перегрев, батарея, место, долгая игра)</span></label>
-          <label class="tgl sub"><input type="checkbox" id="s_proactive_voice"><i></i><span>…голосом (иначе только уведомлением)</span></label>
-          <label class="fld"><span>Перегрев видеокарты, °C <em id="v_proactive_gpu_temp"></em></span><input type="range" id="s_proactive_gpu_temp" min="70" max="100" step="1"></label>
-          <label class="fld"><span>Батарея ниже, % <em id="v_proactive_battery"></em></span><input type="range" id="s_proactive_battery" min="5" max="40" step="1"></label>
-          <label class="fld"><span>Мало места на диске, ГБ <em id="v_proactive_disk_gb"></em></span><input type="range" id="s_proactive_disk_gb" min="0" max="60" step="1"></label>
-          <label class="fld"><span>Предложить перерыв после игры, ч <em id="v_proactive_game_hours"></em></span><input type="range" id="s_proactive_game_hours" min="0" max="6" step="0.5">
-            <small>0 — не напоминать. Игра определяется по нагрузке на видеокарту.</small></label>
-          <label class="tgl"><input type="checkbox" id="s_proactive_night"><i></i><span>Мягко напоминать о сне, если играю после часа ночи</span></label>
-          <label class="tgl"><input type="checkbox" id="s_morning_briefing"><i></i><span>Утренний брифинг: при первом разговоре утром — погода, задачи и напоминания на день</span></label>
+          <div class="group">
+            <label class="tgl"><span data-i18n="pa.on">Tell me about important things (overheating, battery, disk, long gaming)</span><input type="checkbox" id="s_proactive"><i></i></label>
+            <label class="tgl sub"><span data-i18n="pa.voice">…out loud (otherwise only a notification)</span><input type="checkbox" id="s_proactive_voice"><i></i></label>
+            <label class="tgl"><span data-i18n="pa.night">Gently remind me to sleep if I game after 1 am</span><input type="checkbox" id="s_proactive_night"><i></i></label>
+            <label class="tgl"><span data-i18n="pa.briefing">Morning briefing: weather, tasks and reminders in the first chat of the day</span><input type="checkbox" id="s_morning_briefing"><i></i></label>
+          </div>
+          <label class="fld"><span><span data-i18n="pa.gpu">GPU overheating, °C</span> <em id="v_proactive_gpu_temp"></em></span><input type="range" id="s_proactive_gpu_temp" min="70" max="100" step="1"></label>
+          <label class="fld"><span><span data-i18n="pa.battery">Battery below, %</span> <em id="v_proactive_battery"></em></span><input type="range" id="s_proactive_battery" min="5" max="40" step="1"></label>
+          <label class="fld"><span><span data-i18n="pa.disk">Low disk space, GB</span> <em id="v_proactive_disk_gb"></em></span><input type="range" id="s_proactive_disk_gb" min="0" max="60" step="1"></label>
+          <label class="fld"><span><span data-i18n="pa.game">Suggest a break after gaming, h</span> <em id="v_proactive_game_hours"></em></span><input type="range" id="s_proactive_game_hours" min="0" max="6" step="0.5">
+            <small data-i18n="pa.game_h">0 — never. Gaming is detected from GPU load.</small></label>
         </section>
 
         <section class="tab" data-tab="games">
-          <p class="hint"><b>«Вижу экран».</b> Скажите «смотри на экран» или «следи за игрой» — Джарвис будет видеть экран всё время разговора
-            и подсказывать по ходу: в игре, в коде, в задаче (с характером «Репетитор» — пошагово). Кнопка 👁 вверху выключает режим.</p>
-          <div class="hrow"><button class="btn" id="watchOn">👁 Включить сейчас</button></div>
-          <label class="fld"><span>Кадр экрана каждые, сек <em id="v_watch_interval"></em></span><input type="range" id="s_watch_interval" min="1" max="6" step="0.5">
-            <small>Чаще — точнее реагирует, но быстрее тратит лимит Gemini.</small></label>
-          <label class="fld"><span>Ждать в тишине в этом режиме, сек <em id="v_watch_idle_timeout"></em></span><input type="range" id="s_watch_idle_timeout" min="20" max="300" step="10"></label>
-          <label class="fld"><span>Клипы («сохрани момент»)</span><select id="s_clip_method">
-            <option value="auto">Авто: NVIDIA, если запущено приложение NVIDIA, иначе Xbox Game Bar</option>
+          <p class="hint" data-i18n="gm.h">Say “watch my screen” or “follow my game” — Sayro sees your screen for the whole conversation and helps as you go: in games, code or homework (with the Tutor personality — step by step).</p>
+          <div class="hrow"><button class="btn primary" id="watchOn" data-i18n="gm.start">Start seeing my screen</button></div>
+          <label class="fld"><span><span data-i18n="gm.interval">A screen frame every, s</span> <em id="v_watch_interval"></em></span><input type="range" id="s_watch_interval" min="1" max="6" step="0.5">
+            <small data-i18n="gm.interval_h">More often — reacts faster, but uses more of your AI quota.</small></label>
+          <label class="fld"><span><span data-i18n="gm.idle">Wait in silence in this mode, s</span> <em id="v_watch_idle_timeout"></em></span><input type="range" id="s_watch_idle_timeout" min="20" max="300" step="10"></label>
+          <label class="fld"><span data-i18n="gm.clips">Clips (“save that moment”)</span><select id="s_clip_method">
+            <option value="auto" data-i18n="gm.clip_auto">Automatic: NVIDIA if its app is running, otherwise Xbox Game Bar</option>
             <option value="nvidia">NVIDIA Instant Replay (Alt+F10)</option><option value="gamebar">Xbox Game Bar (Win+Alt+G)</option></select>
-            <small>В NVIDIA app нужно включить «Мгновенный повтор», в Game Bar — «Записывать в фоновом режиме».</small></label>
+            <small data-i18n="gm.clips_h">Turn on Instant Replay in the NVIDIA app, or background recording in Game Bar.</small></label>
           <div class="grid2">
-            <label class="fld"><span>Discord: горячая клавиша микрофона</span><input id="s_discord_mute_key" placeholder="ctrl+shift+f9"></label>
-            <label class="fld"><span>Discord: горячая клавиша звука</span><input id="s_discord_deafen_key" placeholder="ctrl+shift+f10"></label>
+            <label class="fld"><span data-i18n="gm.dmute">Discord: mute hotkey</span><input id="s_discord_mute_key" placeholder="ctrl+shift+f9"></label>
+            <label class="fld"><span data-i18n="gm.ddeaf">Discord: deafen hotkey</span><input id="s_discord_deafen_key" placeholder="ctrl+shift+f10"></label>
           </div>
-          <small class="mut">Назначьте эти же сочетания в Discord → Настройки → Горячие клавиши («Вкл./выкл. микрофон», «Вкл./выкл. звук»). Тогда работает «выключи микрофон в дискорде».</small>
+          <small class="mut" data-i18n="gm.discord_h">Set the same shortcuts in Discord → Settings → Keybinds (Toggle mute / Toggle deafen).</small>
         </section>
 
         <section class="tab" data-tab="phone">
-          <p class="hint">Управляйте ноутбуком из Telegram: пишите или отправляйте голосовые — «что на экране», «поставь таймер на 20 минут»,
-            «выключи комп». Сюда же приходят таймеры и предупреждения.</p>
-          <ol class="steps">
-            <li>Откройте в Telegram <a href="https://t.me/BotFather" target="_blank">@BotFather</a>, отправьте <code>/newbot</code>, придумайте имя.</li>
-            <li>Скопируйте токен (вида <code>123456:ABC…</code>) и вставьте ниже, включите переключатель и сохраните.</li>
-            <li>Откройте своего бота и отправьте ему код привязки — он появится здесь.</li>
+          <p class="hint" data-i18n="ph.h">Control your PC from Telegram: text or send voice messages — “what's on my screen”, “set a 20-minute timer”, “shut down the PC”. Timers and alerts arrive here too.</p>
+          <ol class="howto">
+            <li data-i18n="ph.s1">Open @BotFather in Telegram, send /newbot and choose a name.</li>
+            <li data-i18n="ph.s2">Copy the token (looks like 123456:ABC…), paste it below, switch the bot on and save.</li>
+            <li data-i18n="ph.s3">Open your bot and send it the pairing code that appears here.</li>
           </ol>
-          <label class="tgl"><input type="checkbox" id="s_telegram_enabled"><i></i><span>Telegram-бот включён</span></label>
-          <label class="fld"><span>Токен бота</span><input id="sTgToken" type="password" placeholder="вставьте токен (сохранённый скрыт)"><small id="tgTokInfo"></small></label>
+          <div class="hrow"><a class="btn" href="https://t.me/BotFather" target="_blank">@BotFather</a></div>
+          <div class="group"><label class="tgl"><span data-i18n="ph.on">Telegram bot on</span><input type="checkbox" id="s_telegram_enabled"><i></i></label>
+            <label class="tgl"><span data-i18n="ph.notify">Send timers, reminders and alerts</span><input type="checkbox" id="s_telegram_notify"><i></i></label></div>
+          <label class="fld"><span data-i18n="ph.token">Bot token</span><input id="sTgToken" type="password" data-i18n-ph="ph.token_ph" placeholder="Paste the token (the saved one is hidden)"><small id="tgTokInfo"></small></label>
           <div class="tg-status" id="tgStatus">—</div>
-          <label class="tgl"><input type="checkbox" id="s_telegram_notify"><i></i><span>Присылать таймеры, напоминания и предупреждения</span></label>
-          <div class="hrow"><button class="btn" id="tgTest">Отправить проверку</button><button class="btn danger" id="tgUnlink">Отвязать телефон</button></div>
+          <div class="hrow"><button class="btn" id="tgTest" data-i18n="ph.test">Send a test</button><button class="btn danger" id="tgUnlink" data-i18n="ph.unlink">Unlink phone</button></div>
         </section>
 
         <section class="tab" data-tab="apps">
-          <p class="hint">Джарвис сам находит программы из меню «Пуск» (<b id="appsCount">0</b>). Если что-то не находит — добавьте сюда своё название и путь к .exe, ярлыку, папке или сайту.</p>
+          <p class="hint"><span data-i18n="ap.h1">Sayro finds apps from the Start menu by itself</span> (<b id="appsCount">0</b>). <span data-i18n="ap.h2">If it can't find something, add your own name and a path to an .exe, shortcut, folder or website.</span></p>
           <div id="appsTable" class="apps-table"></div>
-          <button class="btn" id="appAdd">+ добавить</button>
-          <label class="fld" style="margin-top:14px"><span>Проверить: что откроется по названию</span>
-            <div class="hrow"><input id="appTest" placeholder="например: калда"><button class="btn" id="appTestBtn">проверить</button></div><small id="appTestRes"></small></label>
+          <button class="btn" id="appAdd" data-i18n="ap.add">+ Add</button>
+          <label class="fld"><span data-i18n="ap.test">Check what opens for a name</span>
+            <div class="hrow"><input id="appTest" placeholder="steam"><button class="btn" id="appTestBtn" data-i18n="ap.check">Check</button></div><small id="appTestRes"></small></label>
         </section>
 
         <section class="tab" data-tab="memory">
-          <div class="fld"><span>Что Джарвис помнит о вас</span><div class="list" id="memList"></div>
-            <div class="hrow"><input id="memNew" placeholder="Добавить факт, например: «пары по вторникам с 8:00»"><button class="btn" id="memAdd">+</button></div></div>
-          <div class="fld"><span>Заметки</span><div class="list" id="noteList"></div></div>
-          <div class="hrow"><button class="btn danger" id="memClear">Забыть всё о себе</button><button class="btn" id="histClear">Очистить историю разговоров</button></div>
+          <div class="fld"><span data-i18n="mem.title">What Sayro remembers about you</span><div class="list group" id="memList"></div>
+            <div class="hrow"><input id="memNew" data-i18n-ph="mem.add_ph" placeholder="Add a fact, e.g. “classes on Tuesdays at 8”"><button class="btn" id="memAdd">+</button></div></div>
+          <div class="fld"><span data-i18n="mem.notes">Notes</span><div class="list group" id="noteList"></div></div>
+          <div class="hrow"><button class="btn danger" id="memClear" data-i18n="mem.clear">Forget everything about me</button><button class="btn" id="histClear" data-i18n="mem.hist">Clear conversation history</button></div>
         </section>
 
         <section class="tab" data-tab="ai">
-          <label class="fld"><span>Ключ Gemini API</span>
-            <div class="hrow"><input id="sKey" type="password" placeholder="вставьте новый ключ (сохранённый скрыт)"><a href="https://aistudio.google.com/apikey" target="_blank" class="btn">получить ключ</a></div>
+          <label class="fld"><span data-i18n="ai.key">Gemini API key</span>
+            <div class="hrow"><input id="sKey" type="password" data-i18n-ph="ai.key_ph" placeholder="Paste a new key (the saved one is hidden)"><a href="https://aistudio.google.com/apikey" target="_blank" class="btn" data-i18n="ai.get">Get a key</a></div>
             <small id="sKeyInfo"></small></label>
-          <label class="fld"><span>Голосовая модель (Live)</span><select id="s_live_model"></select></label>
-          <label class="fld"><span>Модель для зрения и поиска</span><select id="s_text_model"></select></label>
-          <p class="hint">«Авто» — Джарвис сам выбирает лучшую доступную и переключается, если модель перегружена.</p>
+          <div class="hrow"><button class="btn" id="onbAgain" data-i18n="ai.wizard">Open the setup assistant</button></div>
+          <label class="fld"><span data-i18n="ai.live">Voice model (Live)</span><select id="s_live_model"></select></label>
+          <label class="fld"><span data-i18n="ai.text">Model for vision and search</span><select id="s_text_model"></select></label>
+          <p class="hint" data-i18n="ai.auto_h">“Auto” — Sayro picks the best available model and switches if one is overloaded.</p>
+          <p class="hint" data-i18n="ai.privacy">Your voice, screen frames and messages go straight from your PC to Google Gemini under your own key. Sayro has no servers and does not see your data.</p>
         </section>
 
         <section class="tab" data-tab="diag">
-          <div class="upd-box" id="updBox">
-            <div class="hrow"><b id="updTitle">Обновления</b><span class="mut" id="updState"></span></div>
+          <div class="group upd-box" id="updBox">
+            <div class="hrow"><b id="updTitle"></b><span class="mut" id="updState"></span></div>
             <div class="md small" id="updNotes"></div>
-            <div class="hrow wrap"><button class="btn" id="updCheck">Проверить обновления</button>
-              <button class="btn primary hidden" id="updInstall">⬆ Обновить</button></div>
-            <label class="tgl"><input type="checkbox" id="s_update_auto_check"><i></i><span>Проверять обновления автоматически (раз в 6 часов)</span></label>
-            <small class="mut">Ваши настройки, ключи, память и история при обновлении не трогаются. Перед установкой делается копия старой версии; если новая не запустится — Джарвис сам вернёт прежнюю.</small>
+            <div class="hrow wrap"><button class="btn" id="updCheck" data-i18n="up.check">Check for updates</button>
+              <button class="btn primary hidden" id="updInstall" data-i18n="up.install">Update</button></div>
+            <label class="tgl"><span data-i18n="up.auto">Check for updates automatically</span><input type="checkbox" id="s_update_auto_check"><i></i></label>
+            <small class="mut" data-i18n="up.safe">Your settings, keys and memory are never touched. A copy of the old version is kept, and if the new one fails to start, Sayro rolls back by itself.</small>
           </div>
           <div class="info" id="sInfo"></div>
           <div class="hrow wrap">
-            <button class="btn" id="dQuick">Быстрая самопроверка</button>
-            <button class="btn" id="dFull">Полная самопроверка</button>
-            <button class="btn" data-open="log">Открыть лог</button>
-            <button class="btn" data-open="folder">Папка Джарвиса</button>
-            <button class="btn" data-open="screenshots">Скриншоты</button>
-            <button class="btn" id="dRestart">Перезапустить</button>
-            <button class="btn danger" id="dQuit">Выключить Джарвиса</button>
+            <button class="btn" id="dQuick" data-i18n="dg.quick">Quick self-test</button>
+            <button class="btn" id="dFull" data-i18n="dg.full">Full self-test</button>
+            <button class="btn" data-open="log" data-i18n="dg.log">Open log</button>
+            <button class="btn" data-open="folder" data-i18n="dg.folder">App folder</button>
+            <button class="btn" data-open="screenshots" data-i18n="dg.shots">Screenshots</button>
+            <button class="btn" id="dRestart" data-i18n="dg.restart">Restart</button>
+            <button class="btn danger" id="dQuit" data-i18n="dg.quit">Quit Sayro</button>
           </div>
           <pre class="console" id="dOut"></pre>
         </section>
       </div>
-      <div class="set-foot"><span id="setDirty"></span><button id="setSave">СОХРАНИТЬ</button></div>
+      <div class="set-foot"><span id="setDirty"></span><button class="btn primary" id="setSave" data-i18n="btn.save">Save</button></div>
     </div>
   </div>
 </div>
 
-<div id="boot" class="boot">
-  <div class="boot-box">
-    <div class="boot-ring"></div>
-    <pre id="bootLog"></pre>
-  </div>
-</div>
+<div id="boot" class="boot"><div class="boot-orb"></div></div>
 
+<script src="/ui/i18n.js"></script>
 <script src="/ui/app.js"></script>
 </body>
 </html>

@@ -27,63 +27,66 @@ from .winsys import Stats
 log = logging.getLogger("jarvis")
 
 CHARACTER = {
-    "butler": ("Характер: как дворецкий-ИИ из фантастики — безупречно вежливый, собранный, остроумный, с лёгкой "
-               "британской иронией; уверенный и компетентный, никогда не суетишься. Обращаешься к пользователю «{user}» на «вы»."),
-    "friend": ("Характер: дружелюбный, живой, с юмором, общаешься на «ты», как хороший друг, который отлично разбирается "
-               "в компьютерах. Можешь называть пользователя «{user}»."),
-    "pro": "Характер: сдержанный профессионал. Только суть, без шуток и лишних слов. Обращение: «{user}».",
-    "tutor": ("Характер: терпеливый репетитор. Обращаешься «{user}», на «ты». Объясняешь пошагово и простыми словами, "
-              "не выдаёшь сразу готовый ответ — сначала наводящий вопрос или подсказка, потом следующий шаг. Проверяешь "
-              "понимание («понятно, почему так?»). Хвалишь за верные шаги, ошибки разбираешь спокойно. Если видишь экран "
-              "(задача, код, текст) — опирайся на то, что там, и показывай, куда смотреть. Если просят «просто ответ» — даёшь ответ."),
+    "butler": ("Personality: a refined AI butler — impeccably polite, composed and witty, with light dry British humour; "
+               "confident and competent, never fussy. Address the user as “{user}”, formally."),
+    "friend": "Personality: friendly, lively and funny, talks casually like a good friend who is great with computers. Call the user “{user}”.",
+    "pro": "Personality: a reserved professional. Only the essentials, no jokes, no filler. Address the user as “{user}”.",
+    "tutor": ("Personality: a patient tutor. Call the user “{user}”, informally. Explain step by step in simple words; do not give the "
+              "final answer straight away — first a hint or a guiding question, then the next step. Check understanding "
+              "(“does that make sense?”). Praise correct steps, calmly go through mistakes. If you can see the screen (a task, "
+              "code, text), refer to what is there and point to where to look. If asked for “just the answer”, give it."),
     "custom": "",
 }
 LENGTH = {
-    "short": "Отвечай естественно и КОРОТКО: обычно 1–2 предложения. Подробно — только если просят.",
-    "normal": "Отвечай естественно, обычно 2–4 предложения; если тема сложная — чуть подробнее.",
-    "detailed": "Отвечай развёрнуто и обстоятельно, но без воды.",
+    "short": "Answer naturally and BRIEFLY: usually 1–2 sentences. Go into detail only when asked.",
+    "normal": "Answer naturally, usually 2–4 sentences; a bit more when the topic is complex.",
+    "detailed": "Answer thoroughly and in depth, but without filler.",
 }
-LANG = {"auto": "Говори на языке пользователя (по умолчанию русский).", "ru": "Всегда отвечай по-русски.",
-        "uk": "Завжди відповідай українською.", "en": "Always answer in English.", "sk": "Vždy odpovedaj po slovensky."}
+LANG = {"auto": "Always reply in the language the user speaks or writes in.",
+        "ru": "Always reply in Russian.", "uk": "Always reply in Ukrainian.", "en": "Always reply in English.",
+        "sk": "Always reply in Slovak.", "cs": "Always reply in Czech.", "de": "Always reply in German.",
+        "fr": "Always reply in French.", "es": "Always reply in Spanish.", "it": "Always reply in Italian.",
+        "pl": "Always reply in Polish."}
 
-PROMPT = """Ты — ДЖАРВИС, персональный ИИ-ассистент, встроенный в ноутбук пользователя (Windows).
+PROMPT = """You are {name}, a personal AI assistant built into the user's Windows PC. You can hear, speak, see the screen and act on the computer.
 {character}
 
-Как говорить:
-- Это голосовой разговор. {length}
-- {lang} Числа, единицы и время произноси по-человечески.
-- Никаких списков, markdown и ссылок голосом. Длинное (рецепт, план, код, таблицу, перевод текста) покажи через display, а вслух — суть.
-- Не начинай с «Конечно!» и не повторяй вопрос. Сразу к делу.
+How to speak:
+- This is a voice conversation. {length}
+- {lang} Say numbers, units and times the way people say them aloud.
+- No lists, markdown or links in speech. Long content (a recipe, plan, code, table, translation) — show it with display and say only the gist.
+- Do not start with “Sure!” and do not repeat the question. Get straight to the point.
 
-Как действовать:
-- Если просят что-то сделать на компьютере — ВЫЗЫВАЙ функцию сразу, не спрашивая лишнего и не объясняя, как это сделать вручную.
-  Никогда не говори, что сделал, если не вызвал функцию. После результата — короткое подтверждение.
-- Несколько действий подряд — вызывай несколько функций по очереди (например: открыть программу → посмотреть на экран → кликнуть).
-- Свежие факты (новости, курсы, матчи, цены, «кто сейчас…», всё после 2025 года) — через search_internet / get_weather / exchange_rate.
-  Пока ищешь, можно сказать «секунду».
-- Вопросы про то, что на экране, ошибки, «помоги с этим», «прочитай» — look_at_screen.
-- Нажать кнопку/ссылку/пункт в программе — click_on_screen с понятным описанием элемента.
-- Режимы: «создай режим X: …» — routine_save (сам переведи слова в шаги); «включи режим X» — routine_run.
-  «Не мешай», «тихо», «я на паре/в игре» — quiet_mode. Таймеры и будильники в тихом режиме всё равно срабатывают.
-- «Смотри на экран», «следи за игрой», «помоги, я решаю задачу» — watch_screen on=true; кадры экрана будут приходить
-  сами, комментируй по ним. Если тебе приходят кадры экрана (видео) — режим уже включён: смотри на них и не вызывай
-  look_at_screen. «Хватит смотреть» — watch_screen on=false.
-- «Обновись», «есть обновления?» — jarvis_update (install — только после «да»).
-- «Сохрани момент», «клипни» — game_clip. «Выключи микрофон в дискорде» — discord mute.
-- Если на экране Джарвиса открыта карточка (после display или search_internet) и пользователь говорит «закрой», «убери»,
-  «понял», «спасибо» — вызывай close_display. «Сверни себя/своё окно» — hud_window minimize, «покажись» — hud_window show.
-{danger}- Когда пользователь прощается или говорит «спасибо, всё» — коротко ответь и вызови end_conversation.
-- Сообщения в квадратных скобках [СИСТЕМА: …] — служебные события (таймер, напоминание, предупреждение о перегреве,
-  батарее, долгой игре). Озвучь их пользователю коротко, по-человечески, без слова «система».
-- Если не расслышал — переспроси одним словом. Шум и фоновые разговоры не к тебе — игнорируй.
+How to act:
+- When asked to do something on the computer, CALL the function right away — do not ask unnecessary questions or explain how to do it manually.
+  Never say you did something unless you called the function. After the result, confirm briefly.
+- Several actions in a row — call several functions one after another (e.g. open an app → look at the screen → click).
+- Fresh facts (news, rates, scores, prices, “who is currently…”, anything after 2025) — use search_internet / get_weather / exchange_rate.
+  While searching you may say “one moment”.
+- Questions about what is on the screen, errors, “help me with this”, “read this” — look_at_screen.
+- To press a button/link/menu item in an app — click_on_screen with a clear description of the element.
+- Routines: “create a routine X: …” — routine_save (translate the user's words into steps yourself); “start routine X” — routine_run.
+  “Do not disturb”, “quiet”, “I'm in class/in a game” — quiet_mode. Timers and alarms still ring in quiet mode.
+- “Watch my screen”, “follow my game”, “help me, I'm solving a task” — watch_screen on=true; screen frames will then arrive
+  by themselves, comment on them. If you are receiving screen frames (video), the mode is already on: look at them and do not
+  call look_at_screen. “Stop watching” — watch_screen on=false.
+- “Update yourself”, “any updates?” — jarvis_update (install only after an explicit “yes”).
+- “Save that moment”, “clip it” — game_clip. “Mute me on Discord” — discord mute.
+- If a card is open on your window (after display or search_internet) and the user says “close”, “got it”, “thanks” —
+  call close_display. “Minimize yourself” — hud_window minimize, “show yourself” — hud_window show.
+{danger}- When the user says goodbye or “thanks, that's all” — answer briefly and call end_conversation.
+- Messages in square brackets [SYSTEM: …] or [СИСТЕМА: …] are service events (timer, reminder, overheating, battery, long
+  gaming session). Tell the user about them briefly and naturally, in the user's language, without saying “system”.
+- If you did not hear clearly, ask again in one word. Background noise and other people's conversations are not for you — ignore them.
 {custom}
-Контекст:
-- Сейчас: {now}. Город пользователя: {city}.
+Context:
+- Now: {now}. User's city: {city}.
 {routines}{briefing}{memory}{history}"""
 
 
 def build_prompt(cfg, now, memory="", history="", routines="", briefing="", pro=True):
-    user = cfg.get("user_name") or "сэр"
+    from .brand import name as brand_name
+    user = cfg.get("user_name") or ("сэр" if cfg.get("ui_language") == "ru" else "sir")
     persona = cfg.get("persona", "butler")
     from .license import PRO_PERSONAS
     if not pro and persona in PRO_PERSONAS:
@@ -91,16 +94,17 @@ def build_prompt(cfg, now, memory="", history="", routines="", briefing="", pro=
     character = CHARACTER.get(persona, CHARACTER["butler"]).format(user=user)
     if persona == "custom" and not cfg.get("custom_instructions"):
         character = CHARACTER["butler"].format(user=user)
-    danger = ("- Выключение, перезагрузка, очистка корзины, клики по кнопкам «купить/оплатить/удалить/отправить» — "
-              "сначала короткий вопрос-подтверждение, потом действие с confirmed=true.\n") if cfg.get("confirm_dangerous", True) else \
-             "- Опасные действия (выключение, перезагрузка, корзина) выполняй сразу с confirmed=true, без переспрашивания.\n"
+    danger = ("- Shutdown, restart, emptying the recycle bin, clicking “buy/pay/delete/send” buttons — first a short confirmation "
+              "question, then the action with confirmed=true.\n") if cfg.get("confirm_dangerous", True) else \
+             "- Dangerous actions (shutdown, restart, recycle bin) — do them right away with confirmed=true, without asking.\n"
     custom = ""
     if (cfg.get("custom_instructions") or "").strip():
-        custom = "\nОсобые указания пользователя (соблюдай их в первую очередь):\n" + cfg["custom_instructions"].strip() + "\n"
+        custom = "\nThe user's own instructions (follow them first):\n" + cfg["custom_instructions"].strip() + "\n"
     if not pro:
-        custom += ("\nЭто бесплатная версия. Режимы, тихий режим, «вижу экран», репетитор, Telegram-бот и проактивность — "
-                   "функции Pro: если о них просят, коротко скажи, что их можно включить в Настройках → Pro.\n")
-    return PROMPT.format(character=character, length=LENGTH.get(cfg.get("reply_length"), LENGTH["short"]),
+        custom += ("\nThis is the free version. Routines, quiet mode, screen watching, the tutor, the Telegram bot and proactive alerts "
+                   "are Pro features: if asked for them, briefly say they can be unlocked in Settings → Pro.\n")
+    return PROMPT.format(name=brand_name(cfg.get("ui_language") or "en"), character=character,
+                         length=LENGTH.get(cfg.get("reply_length"), LENGTH["short"]),
                          lang=LANG.get(cfg.get("reply_language"), LANG["auto"]), danger=danger, custom=custom,
                          now=now, city=cfg.get("city", ""), memory=memory, history=history,
                          routines=routines, briefing=briefing)
@@ -281,8 +285,16 @@ class Assistant:
         if self.loop:
             self.loop.call_soon_threadsafe(self.broadcast, msg)
 
+    @property
+    def lang(self):
+        return self.cfg.get("ui_language") or "en"
+
+    def tr(self, text):
+        from .i18n import tr
+        return tr(text, self.lang)
+
     def toast(self, text):
-        self._threadsafe({"t": "toast", "text": text})
+        self._threadsafe({"t": "toast", "text": self.tr(text)})
 
     def ui_card(self, title, content, kind="info"):
         self.card_open = True
@@ -308,9 +320,10 @@ class Assistant:
         self.broadcast({"t": "settings", "data": self.settings_payload()})
 
     def settings_payload(self):
+        from .brand import name as brand_name
         from .config import PERSONAS, TOOL_GROUPS
         from .desktop import autostart_enabled
-        return {"config": self.cfg.public(), "voices": VOICES, "devices": list_devices(),
+        return {"brand": brand_name(self.lang), "config": self.cfg.public(), "voices": VOICES, "devices": list_devices(),
                 "personas": PERSONAS, "tool_groups": {k: v[0] for k, v in TOOL_GROUPS.items()},
                 "autostart_real": autostart_enabled(), "hotkey_ok": getattr(self, "hotkey_ok", True),
                 "apps_indexed": len(self.apps.index), "files_indexed": len(self.apps.files),
@@ -326,7 +339,8 @@ class Assistant:
                 "license": self.license.info()}
 
     def snapshot(self):
-        return {"t": "snapshot", "state": self.state, "detail": self.state_detail, "store": self.store.snapshot(),
+        from .updater import current_version
+        return {"t": "snapshot", "version": current_version(), "state": self.state, "detail": self.state_detail, "store": self.store.snapshot(),
                 "weather": self.weather, "settings": self.settings_payload(),
                 "history": self.store.recent_history(max_age=24 * 3600, n=30), "boot": time.time() - self.boot_ts}
 
@@ -352,12 +366,12 @@ class Assistant:
         n = dt.datetime.now()
         now = f"{WEEKDAYS[n.weekday()]}, {n.day} {MONTHS_GEN[n.month - 1]} {n.year}, {n:%H:%M}"
         facts = [m["fact"] for m in self.store.snapshot()["memory"]]
-        memory = ("- Что ты знаешь о пользователе (он просил запомнить):\n" + "\n".join(f"  • {f}" for f in facts[-40:]) + "\n") if facts else ""
+        memory = ("- What you know about the user (they asked you to remember):\n" + "\n".join(f"  • {f}" for f in facts[-40:]) + "\n") if facts else ""
         hist = self.store.recent_history()
-        history = ("- Недавний разговор (для контекста):\n" + "\n".join(
-            f"  {'Пользователь' if h['r'] == 'user' else 'Джарвис'}: {h['t']}" for h in hist) + "\n") if hist else ""
+        history = ("- Recent conversation (for context):\n" + "\n".join(
+            f"  {'User' if h['r'] == 'user' else 'You'}: {h['t']}" for h in hist) + "\n") if hist else ""
         rs = self.store.snapshot()["routines"]
-        routines = ("- Сохранённые режимы: " + "; ".join(
+        routines = ("- Saved routines: " + "; ".join(
             f"«{r['name']}» ({', '.join(self.tools.describe_step(x) for x in r['steps'][:6])})" for r in rs) + "\n") if rs else ""
         briefing = self._briefing_block(n) if briefing and self.pro else ""
         prompt = build_prompt(self.cfg, now, memory, history, routines, briefing, pro=self.pro)
@@ -696,10 +710,12 @@ class Assistant:
     async def _fire_timer(self, t):
         kind = {"timer": "Таймер", "reminder": "Напоминание", "alarm": "Будильник"}.get(t["kind"], "Таймер")
         label = t.get("label") or ""
-        self.broadcast({"t": "alert", "title": kind, "text": label or "время вышло"})
+        from .brand import name as brand_name
+        k_tr, up = self.tr(kind), self.tr("время вышло")
+        self.broadcast({"t": "alert", "title": k_tr, "text": label or up})
         from .desktop import notify
-        notify(f"Джарвис · {kind}", label or "Время вышло")
-        self.tg_notify(f"⏰ {kind}: {label or 'время вышло'}")
+        notify(f"{brand_name(self.lang)} · {k_tr}", label or self.tr("Время вышло"))
+        self.tg_notify(f"⏰ {k_tr}: {label or up}")
         reps = 3 if t["kind"] == "alarm" else 1
         for _ in range(reps):
             self.audio.chime("alert")
@@ -739,22 +755,22 @@ class Assistant:
         w = self.weather
         if w and w.get("now"):
             d0 = (w.get("days") or [{}])[0]
-            parts.append(f"погода в {w.get('city')}: сейчас {w['now']['temp']}°, {w['now']['desc']}; днём до {d0.get('max', '?')}°, "
-                         f"ночью {d0.get('min', '?')}°, вероятность осадков {d0.get('rain', '?')}%")
+            parts.append(f"weather in {w.get('city')}: now {w['now']['temp']}°, {w['now']['desc']}; high {d0.get('max', '?')}°, "
+                         f"low {d0.get('min', '?')}°, chance of rain {d0.get('rain', '?')}%")
         snap = self.store.snapshot()
         todo = [t["text"] for t in snap["tasks"] if not t["done"]][:5]
         if todo:
-            parts.append("незакрытые задачи: " + "; ".join(todo))
+            parts.append("open tasks: " + "; ".join(todo))
         end = dt.datetime.combine(n.date(), dt.time(23, 59)).timestamp()
         today = [t for t in snap["timers"] if t["due"] <= end and t["kind"] in ("reminder", "alarm")]
         if today:
-            parts.append("напоминания на сегодня: " + "; ".join(
+            parts.append("reminders today: " + "; ".join(
                 f"{dt.datetime.fromtimestamp(t['due']):%H:%M} {t['label'] or ''}".strip() for t in today[:5]))
         if not parts:
-            parts.append("особых дел нет")
-        return ("- УТРЕННИЙ БРИФИНГ: это первый разговор за сегодня. Если пользователь поздоровался или спросил что-то общее — "
-                "пожелай доброго утра и дай брифинг в 2–4 коротких фразах. Если он дал конкретную команду — сначала выполни её, "
-                "а брифинг дай одной-двумя фразами после. Данные: " + " | ".join(parts) + "\n")
+            parts.append("nothing special planned")
+        return ("- MORNING BRIEFING: this is the first conversation today. If the user greets you or asks something general — "
+                "wish them a good morning and give a briefing in 2–4 short sentences. If they gave a specific command — do it first, "
+                "then give the briefing in one or two sentences. Data: " + " | ".join(parts) + "\n")
 
     # ════════════════════════ режим «вижу экран» ════════════════════════
     def set_watch(self, on):
@@ -875,10 +891,11 @@ class Assistant:
         log.info("проактивно [%s]: %s", key, short)
         self.toast(short)
         if self.cfg.get("telegram_notify", True):
-            self.tg_notify(short)
+            self.tg_notify(self.tr(short))
         if self.quiet() or not self.cfg.get("proactive_voice", True):
             from .desktop import notify
-            notify("Джарвис", short)
+            from .brand import name as brand_name
+            notify(brand_name(self.lang), self.tr(short))
             return
         self._pending_say.append(text)
 
@@ -934,7 +951,7 @@ class Assistant:
                 txt = f"Обновление до {r['new']} не удалось ({r.get('error', '')[:80]}) — вернул версию {r['old']}"
             log.info(txt)
             self.toast(txt)
-            self.tg_notify(("⬆ " if r.get("ok") else "⚠ ") + txt)
+            self.tg_notify(("⬆ " if r.get("ok") else "⚠ ") + self.tr(txt))
             if r.get("ok") and self.cfg.get("sounds", True):
                 self.audio.chime("on")
         notified = ""
@@ -945,7 +962,7 @@ class Assistant:
                 if info.get("available") and info.get("latest") != notified:
                     notified = info["latest"]
                     self.toast(f"⬆ Доступна новая версия {info['latest']} — кнопка вверху")
-                    self.tg_notify(f"⬆ Доступна новая версия Джарвиса {info['latest']}.\n{info.get('notes', '')[:600]}")
+                    self.tg_notify(self.tr(f"⬆ Доступна новая версия {info['latest']} — кнопка вверху") + f"\n{info.get('notes', '')[:600]}")
             await asyncio.sleep(6 * 3600)
 
     # ════════════════════════ телефон ════════════════════════
@@ -986,7 +1003,13 @@ class Assistant:
             self.mic_enabled = bool(msg.get("on", True))
             self.broadcast({"t": "mic", "on": self.mic_enabled})
         elif t == "settings":
-            await self.apply_settings(msg.get("data") or {})
+            await self.apply_settings(msg.get("data") or {}, silent=bool(msg.get("silent")))
+        elif t == "key_check":
+            key = (msg.get("key") or "").strip()
+            ok, err = await asyncio.to_thread(self._check_key, key)
+            if ok:
+                await self.apply_settings({"gemini_api_key": key}, silent=True)
+            self.broadcast({"t": "key_check", "ok": ok, "error": err})
         elif t == "timer_cancel":
             self.store.cancel_timer(tid=msg.get("id"))
         elif t == "task_add":
@@ -1096,7 +1119,8 @@ class Assistant:
             self.push_settings()
         elif t == "tg_test":
             if self.telegram and self.cfg.get("telegram_chat_id"):
-                self.telegram.notify("✅ Проверка связи: Джарвис на связи.")
+                from .i18n import ui as uistr
+                self.telegram.notify("✅ " + uistr("py.tg_test_msg", self.lang))
                 self.toast("Отправил тестовое сообщение в Telegram")
             else:
                 self.toast("Сначала привяжите бота (код в настройках)")
@@ -1121,7 +1145,24 @@ class Assistant:
         except Exception as e:
             self.toast(f"Погода: {e}")
 
-    async def apply_settings(self, data):
+    def _check_key(self, key):
+        """Проверка ключа Gemini из мастера первого запуска: список моделей."""
+        import requests
+        if not key:
+            return False, "empty"
+        try:
+            r = requests.get("https://generativelanguage.googleapis.com/v1beta/models", headers={"x-goog-api-key": key},
+                             params={"pageSize": 5}, timeout=15)
+            if r.status_code == 200:
+                return True, ""
+            try:
+                return False, (r.json().get("error") or {}).get("message", f"HTTP {r.status_code}")[:160]
+            except Exception:
+                return False, f"HTTP {r.status_code}"
+        except Exception as e:
+            return False, str(e)[:160]
+
+    async def apply_settings(self, data, silent=False):
         from .config import coerce
         changed, errors = [], []
         for k, v in data.items():
@@ -1150,7 +1191,7 @@ class Assistant:
                 self.set_state("idle")
         if {"mic_device", "speaker_device"} & set(changed):
             await asyncio.to_thread(self.audio.restart)
-        if {"wake_engine"} & set(changed):
+        if {"wake_engine", "wake_word", "ui_language"} & set(changed):
             self.audio.consumers.clear()
             self.wake = await asyncio.to_thread(Wake, self.cfg, self._on_wake_thread)
             self.audio.consumers.append(self._on_frame)
@@ -1176,12 +1217,14 @@ class Assistant:
         if self.session and (live_keys & set(changed)):
             notes.append("часть изменений применится со следующего разговора")
         self.push_settings()
-        msg = "Настройки сохранены" if changed else "Ничего не изменилось"
+        if silent and not errors:
+            return
+        msg = self.tr("Настройки сохранены") if changed else self.tr("Ничего не изменилось")
         if notes:
-            msg += " — " + "; ".join(notes)
+            msg += " — " + "; ".join(self.tr(n) for n in notes)
         if errors:
-            msg += ". Ошибки: " + "; ".join(errors)
-        self.toast(msg)
+            msg += ". ⚠ " + "; ".join(errors)
+        self._threadsafe({"t": "toast", "text": msg})
 
     async def _run_selftest(self, full=True, only=None):
         import subprocess
@@ -1190,7 +1233,7 @@ class Assistant:
         if not py.exists():
             py = sys.executable
         args = [str(py), str(BASE / "selftest.py")] + ([] if full else ["--quick"])
-        if only in ("click", "new", "watch", "update"):
+        if only in ("click", "new", "watch", "update", "i18n"):
             args += ["--only", only]
         self.broadcast({"t": "selftest", "line": "▶ Запускаю самопроверку…", "start": True})
         env = dict(__import__("os").environ, PYTHONIOENCODING="utf-8")

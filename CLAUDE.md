@@ -1,9 +1,18 @@
-# J.A.R.V.I.S. v2 — голосовой ИИ-ассистент для Windows
+# Sayro (бывший J.A.R.V.I.S.) — голосовой ИИ-ассистент для Windows
 
-Личный проект Арсения. Общение с пользователем — на русском. Ноутбук: Windows 11, RTX 5070 Laptop, экран 2560×1600,
+Продукт Арсения для рынков США и ЕС (бесплатно + Pro $4.99/мес). Общение с Арсением — на русском; интерфейс продукта — 10 языков. Ноутбук: Windows 11, RTX 5070 Laptop, экран 2560×1600,
 гарнитура Razer BlackShark V3 Pro. Город по умолчанию — Жилина (Словакия).
 
 ## Как устроено
+
+- **Бренд — только `core/brand.py`** (NAME, локализованные имена, варианты распознавания имени для активации). Заголовок окна
+  всегда `WINDOW_TITLE` — по нему ядро ищет окно (не локализовать). Ключ `/ping` → `{"jarvis": true}` не менять: его проверяют старые установщики.
+- **Переводы**: английский источник — тексты в `ui/index.html` (`data-i18n`, `data-i18n-ph`, `data-i18n-title`), `STR` в `ui/app.js`,
+  `PY`/`PY_ONLY` в `core/i18n.py` (сообщения ядра пишутся по-русски и переводятся по шаблону в `Assistant.toast`).
+  `python tools/build_i18n.py` → `ui/i18n/en.json`; на ноутбуке `selftest.py --only i18n` (= `tools/translate_i18n.py`)
+  переводит недостающие ключи через Gemini во все `ui/i18n/<lang>.json`. После изменения текстов — оба шага.
+- Системный промпт модели — на английском (`build_prompt`), модель отвечает на языке пользователя.
+- Пробный период: `data/trial.json` (7 дней Pro с первого запуска), `License.pro = licensed or trial`.
 
 - `jarvis.py` — точка входа (проверка второй копии через `/ping`, DPI awareness, удаление dev-мусора).
 - `core/assistant.py` — оркестратор: слово активации → Live-сессия → инструменты → UI. Тут же системный промпт (`build_prompt`,
@@ -14,7 +23,7 @@
 - `core/apps.py` — индекс программ (меню «Пуск» + `Get-StartApps`), русские алиасы, поиск файлов.
 - `core/winsys.py` — Windows через ctypes: клавиши, мышь, громкость (pycaw), яркость (WMI), буфер обмена, окна, питание, статистика.
 - `core/audio.py` — микрофон 16 кГц / динамик 24 кГц (sounddevice, MME), чимы, автоопределение гарнитуры.
-- `core/wake.py` — гибридная активация: openWakeWord `hey_jarvis` + проверка речью (`core/stt.py`) на слово «джарвис».
+- `core/wake.py` — активация. «Hey Sayro»: распознавание коротких фраз Google STT на языке интерфейса (+ второй шанс на en-US), т.к. локальной модели пока нет. «Hey Jarvis» (`wake_word=jarvis`): openWakeWord + проверка речью. TODO: обучить openWakeWord `hey_sayro` (приватность для ЕС).
 - `core/websearch.py` — Google через `msedge --headless --dump-dom`, Google News RSS, Википедия, первое видео YouTube.
 - `core/server.py` — aiohttp на 127.0.0.1:8765 (UI + `/ws`), `core/desktop.py` — окно Edge `--app`, трей, хоткей, автозапуск, рестарт.
 - `core/telegram.py` — Telegram-бот (long polling, без сервера): привязка по 6-значному коду, текстовый агент Gemini REST +
@@ -26,7 +35,7 @@
 - Обновления — `core/updater.py` (`VERSION`/`CHANGELOG.md` из ветки `main` репозитория `update_repo` через raw.githubusercontent, zip через codeload, проверка раз в 6 ч) + `core/update_helper.py` (отдельный процесс из
   `data/update/helper.py`: ждёт выхода, копия в `data/backup/v<old>`, ставит файлы, pip при новом requirements.txt, ждёт `/ping` 60 с, иначе откат).
   Результат — `data/update/result.json`, его показывает новая версия при старте. Версия — файл `VERSION`.
-- `ui/` — HUD (index.html, style.css, app.js): реактор на canvas, панели, чат, флаги 👁/🔕/🎮/📱 в шапке, окно настроек с 14 вкладками (первая — «⭐ Pro»).
+- `ui/` — интерфейс в стиле Apple (index.html, style.css, app.js, i18n.js): шар, «Сегодня», флаги, настройки-лист с 14 разделами, мастер первого запуска (`#onb`), темы light/dark/system.
 - `core/config.py` — DEFAULTS + SCHEMA/`coerce()` (всё, что меняется из UI, проходит через coerce).
 - Данные: `config.json` (там API-ключ и токен Telegram!), `data/data.json` (таймеры, задачи, заметки, память, история, режимы, тихий режим), `jarvis.log`.
 

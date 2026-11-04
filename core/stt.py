@@ -45,7 +45,7 @@ def wav_bytes(pcm16k: bytes) -> bytes:
 def gemini(pcm16k: bytes, api_key: str, model="gemini-3.1-flash-lite", timeout=8) -> str:
     body = {"contents": [{"role": "user", "parts": [
         {"inline_data": {"mime_type": "audio/wav", "data": base64.b64encode(wav_bytes(pcm16k)).decode()}},
-        {"text": "Дословно расшифруй речь на записи (русский или английский). Выведи только текст, без пояснений. Если речи нет — пусто."}]}]}
+        {"text": "Transcribe the speech in this recording verbatim, in its original language. Output only the text. If there is no speech, output nothing."}]}]}
     r = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                       headers={"x-goog-api-key": api_key, "Content-Type": "application/json"}, json=body, timeout=timeout)
     r.raise_for_status()
@@ -53,9 +53,9 @@ def gemini(pcm16k: bytes, api_key: str, model="gemini-3.1-flash-lite", timeout=8
     return " ".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
 
 
-def transcribe(pcm16k: bytes, api_key: str = "") -> str:
+def transcribe(pcm16k: bytes, api_key: str = "", lang: str = "ru-RU") -> str:
     try:
-        return google(pcm16k)
+        return google(pcm16k, lang)
     except Exception as e:
         log.debug("google stt: %s", e)
     if api_key:
