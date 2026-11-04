@@ -281,3 +281,5 @@ select option,select optgroup{background-color:var(--bg2);color:var(--text)}
 select option:checked{background-color:var(--accent);color:#fff}
 body[data-theme=dark] select{color-scheme:dark}
 body[data-theme=light] select{color-scheme:light}
+
+.legal{font-size:12.5px;line-height:1.5;margin-top:14px}.legal a{color:var(--accent);text-decoration:none}.legal a:hover{text-decoration:underline}

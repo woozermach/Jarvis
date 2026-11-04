@@ -31,7 +31,7 @@ jobs:
         run: |
           $stage = "build\app"
           New-Item $stage -ItemType Directory -Force | Out-Null
-          robocopy . $stage /E /NFL /NDL /NJH /NJS /XD .git .github build data __pycache__ .venv py installer /XF config.json jarvis.log CLAUDE.local.md
+          robocopy . $stage /E /NFL /NDL /NJH /NJS /XD .git .github build data __pycache__ .venv py installer docs /XF config.json jarvis.log CLAUDE.local.md
           if ($LASTEXITCODE -ge 8) { exit 1 }
           exit 0
 

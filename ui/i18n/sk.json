@@ -488,5 +488,10 @@
 "py.tg_quiet": "Tichý režim na hodinu.",
 "py.tg_latest": "Verzia {v} je najnovšia.",
 "py.tg_updating": "Inštaluje sa verzia {v}, o chvíľu som späť…",
-"py.tg_kinds": "Rozumiem textu, hlasovým správam aj fotografiám."
+"py.tg_kinds": "Rozumiem textu, hlasovým správam aj fotografiám.",
+"legal.note": "Sayro posiela váš hlas a len na požiadanie aj obrazovku do Google Gemini s vaším vlastným kľúčom. Vývojárovi sa nič neposiela.",
+"legal.privacy": "Zásady ochrany súkromia",
+"legal.terms": "Podmienky používania",
+"legal.site": "Web Sayro",
+"state.thinking_h": ""
 }

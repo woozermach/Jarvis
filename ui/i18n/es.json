@@ -488,5 +488,10 @@
 "py.tg_quiet": "Modo silencioso durante una hora.",
 "py.tg_latest": "La versión {v} es la más reciente.",
 "py.tg_updating": "Instalando la versión {v}, vuelvo en medio minuto…",
-"py.tg_kinds": "Entiendo texto, mensajes de voz y fotos."
+"py.tg_kinds": "Entiendo texto, mensajes de voz y fotos.",
+"legal.note": "Sayro envía tu voz y, solo cuando lo pides, tu pantalla a Google Gemini con tu propia clave. No se envía nada al desarrollador.",
+"legal.privacy": "Política de privacidad",
+"legal.terms": "Condiciones de uso",
+"legal.site": "Web de Sayro",
+"state.thinking_h": ""
 }

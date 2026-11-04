@@ -488,5 +488,10 @@
 "py.tg_quiet": "Ruhemodus für eine Stunde.",
 "py.tg_latest": "Version {v} ist aktuell.",
 "py.tg_updating": "Installiere Version {v}, bin in einer halben Minute zurück…",
-"py.tg_kinds": "Ich verstehe Text, Sprachnachrichten und Fotos."
+"py.tg_kinds": "Ich verstehe Text, Sprachnachrichten und Fotos.",
+"legal.note": "Sayro sendet deine Stimme und, nur wenn du es möchtest, deinen Bildschirm mit deinem eigenen Schlüssel an Google Gemini. An den Entwickler wird nichts gesendet.",
+"legal.privacy": "Datenschutzerklärung",
+"legal.terms": "Nutzungsbedingungen",
+"legal.site": "Sayro-Website",
+"state.thinking_h": ""
 }
