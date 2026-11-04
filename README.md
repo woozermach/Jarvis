@@ -35,7 +35,13 @@ voice, screen or messages. On first launch the setup assistant helps you connect
 
 ## Install
 
-Windows 10/11. Download the repository (Code → Download ZIP), unpack it and run **install.bat**, then **start.bat**.
+Windows 10/11, no admin rights needed.
+
+**[⬇ Download SayroSetup.exe](https://github.com/woozermach/Jarvis/releases/latest/download/SayroSetup.exe)** (≈64 MB, everything included), run it and follow the wizard.
+
+If Windows shows *“Windows protected your PC”*, click **More info → Run anyway** (the installer is not code-signed yet).
+
+For developers: download the repository, run **install.bat**, then **start.bat**.
 Updates install with one click from the app (green button at the top).
 
 ## Privacy
