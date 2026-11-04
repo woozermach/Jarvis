@@ -10,3 +10,7 @@ CLAUDE.local.md
 __pycache__/
 *.pyc
 py/
+
+# сборка установщика
+build/
+installer/languages.iss
