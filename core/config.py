@@ -110,6 +110,8 @@ DEFAULTS = {
     "telegram_token": "",
     "telegram_chat_id": 0,
     "telegram_notify": True,     # присылать таймеры и предупреждения
+    # лицензия Pro
+    "license_key": "",
     # обновления
     "update_repo": "woozermach/Jarvis",
     "update_branch": "main",
@@ -140,7 +142,7 @@ SCHEMA = {
     "watch_interval": ("float", 0.5, 10), "watch_idle_timeout": ("int", 15, 600),
     "clip_method": ("choice", ["auto", "nvidia", "gamebar"]),
     "discord_mute_key": ("str", 40), "discord_deafen_key": ("str", 40),
-    "update_repo": ("str", 100), "update_branch": ("str", 60), "update_auto_check": ("bool",),
+    "license_key": ("str", 800), "update_repo": ("str", 100), "update_branch": ("str", 60), "update_auto_check": ("bool",),
     "telegram_enabled": ("bool",), "telegram_notify": ("bool",), "telegram_token": ("str", 120), "telegram_chat_id": ("int", 0, 10**15),
 }
 
@@ -209,6 +211,8 @@ class Config(dict):
         t = d.get("telegram_token", "")
         d["telegram_token"] = (t[:5] + "…" + t[-3:]) if len(t) > 10 else ""
         d["has_tg_token"] = bool(t)
+        lk = d.get("license_key", "")
+        d["license_key"] = (lk[:8] + "…" + lk[-4:]) if len(lk) > 14 else ("…" if lk else "")
         return d
 
 

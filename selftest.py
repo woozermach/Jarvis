@@ -324,6 +324,36 @@ def t_update(tb):
     return True, f"версия {i['current']}, на GitHub {i.get('latest')}, доступно обновление: {i['available']}"
 
 
+@step("лицензия Pro: ключи и ограничения бесплатной версии")
+def t_license(tb):
+    from core.license import License, parse_offline, PRO_TOOLS
+    assert parse_offline("PRO-abc.def") is None and parse_offline("мусор") is None
+    out = []
+    skp = BASE / "data" / "license_private.key"
+    if skp.exists():
+        import subprocess
+        key = subprocess.run([sys.executable, str(BASE / "tools" / "make_key.py"), "самотест", "--days", "1"],
+                             capture_output=True, text=True, encoding="utf-8").stdout.strip()
+        d = parse_offline(key)
+        assert d and d["n"] == "самотест", key[:40]
+        bad = key[:-3] + ("AAA" if not key.endswith("AAA") else "BBB")
+        assert parse_offline(bad) is None, "подделанный ключ принят!"
+        out.append("свой ключ выпускается и проверяется, подделка отклоняется")
+    else:
+        out.append("секрета владельца нет — выпуск ключей не проверял")
+    was = getattr(tb.ctx, "pro", True)
+    tb.ctx.pro = False
+    r = tb.call("routine_list", {})
+    tb.ctx.pro = was
+    assert r.get("error") == "pro_only", r
+    from core.assistant import build_prompt
+    p = build_prompt({"persona": "tutor"}, "сейчас", pro=False)
+    assert "репетитор" not in p.lower().split("особые")[0] and "бесплатная версия" in p
+    lic = License(cfg)
+    out.append(f"бесплатная версия блокирует {len(PRO_TOOLS)} функций; сейчас: {'Pro' if lic.pro else 'бесплатная'} {lic.info().get('name', '')}")
+    return True, "; ".join(out)
+
+
 @step("gemini: vision")
 def t_vision(tb):
     return str(tb.t_look_at_screen("Опиши одним предложением, что на экране"))[:250]
@@ -361,6 +391,7 @@ class FakeCtx:
     def on_settings_changed(self): pass
     def _threadsafe(self, m): self.events.append((m.get("t"), m.get("name") or m.get("text")))
     def quiet(self): return False
+    pro = True
     def set_watch(self, on): return {"ok": on}
 
 
@@ -566,6 +597,7 @@ def main():
         ctx = FakeCtx()
         tb = __import__("core.tools", fromlist=["Toolbox"]).Toolbox(ctx)
         t_update(tb)
+        t_license(tb)
         return
     if ONLY == "watch":
         t_models()
@@ -591,7 +623,7 @@ def main():
     ctx.tools = tb
     t_weather(tb); t_fx(tb); t_sys(tb); t_vol(tb); t_bright(tb); t_clip(tb); t_misc(tb)
     t_cfg(); t_apps(tb); t_files(tb); t_google(); t_yt()
-    t_routines(tb); t_quiet(tb); t_gaming(tb); t_prompt2(); t_update(tb); t_tg_token()
+    t_routines(tb); t_quiet(tb); t_gaming(tb); t_prompt2(); t_update(tb); t_license(tb); t_tg_token()
     if QUICK:
         return
     t_search(); t_vision(tb); t_click(tb); t_tts(); t_tg_agent(tb)

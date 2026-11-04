@@ -13,7 +13,7 @@
   <header>
     <div class="brand">
       <svg viewBox="0 0 40 40" class="logo"><circle cx="20" cy="20" r="16"/><circle cx="20" cy="20" r="9"/><path d="M20 2v6M20 32v6M2 20h6M32 20h6"/></svg>
-      <div><b>J.A.R.V.I.S.</b><small>Just A Rather Very Intelligent System · <span id="ver">v2</span></small></div>
+      <div><b>J.A.R.V.I.S.<em class="pro-badge hidden" id="proBadge">PRO</em></b><small>Just A Rather Very Intelligent System · <span id="ver">v2</span></small></div>
     </div>
     <div class="chip" id="chip"><i></i><span id="chipText">ЗАГРУЗКА</span></div>
     <div class="flags">
@@ -123,15 +123,16 @@
   <div class="set-box">
     <nav class="set-nav">
       <b>НАСТРОЙКИ</b>
+      <button data-tab="pro" class="nav-pro">⭐ Pro</button>
       <button data-tab="main" class="on">Основное</button>
       <button data-tab="voice">Голос и характер</button>
       <button data-tab="wake">Активация</button>
       <button data-tab="sound">Звук</button>
       <button data-tab="tools">Возможности</button>
-      <button data-tab="routines">Режимы</button>
-      <button data-tab="proactive">Проактивность</button>
+      <button data-tab="routines" class="lockable">Режимы</button>
+      <button data-tab="proactive" class="lockable">Проактивность</button>
       <button data-tab="games">Игры и экран</button>
-      <button data-tab="phone">Телефон</button>
+      <button data-tab="phone" class="lockable">Телефон</button>
       <button data-tab="apps">Программы</button>
       <button data-tab="memory">Память</button>
       <button data-tab="ai">ИИ и ключ</button>
@@ -140,6 +141,25 @@
     <div class="set-main">
       <div class="set-head"><b id="setTitle">Основное</b><button class="icon ghost" id="setClose">✕</button></div>
       <div class="set-body">
+
+        <section class="tab" data-tab="pro">
+          <div class="pro-card" id="proCard">
+            <div class="pro-status" id="proStatus">Бесплатная версия</div>
+            <small class="mut" id="proSub"></small>
+          </div>
+          <div class="pro-cols">
+            <div><b>Бесплатно</b><ul>
+              <li>Голосовой разговор, «Эй, Джарвис», 10 голосов</li><li>Программы, окна, клавиши, клики по экрану</li>
+              <li>Поиск в интернете, YouTube, погода, курсы</li><li>Таймеры, будильники, задачи, заметки, память</li>
+              <li>Скриншот и вопрос по экрану, клипы игр, Discord</li><li>Обновления одной кнопкой</li></ul></div>
+            <div><b>⭐ Pro</b><ul id="proList"></ul></div>
+          </div>
+          <div class="hrow"><a class="btn primary hidden" id="proBuy" target="_blank">Купить Pro</a><span class="mut" id="proNoShop">Магазин скоро откроется.</span></div>
+          <label class="fld"><span>Ключ лицензии</span>
+            <div class="hrow"><input id="licKey" placeholder="вставьте ключ из письма Gumroad или ключ PRO-…"><button class="btn" id="licAct">Активировать</button>
+              <button class="btn danger hidden" id="licDel">Удалить ключ</button></div>
+            <small id="licInfo" class="mut"></small></label>
+        </section>
 
         <section class="tab on" data-tab="main">
           <div class="grid2">

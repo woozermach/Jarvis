@@ -26,7 +26,7 @@
 - Обновления — `core/updater.py` (`VERSION`/`CHANGELOG.md` из ветки `main` репозитория `update_repo` через raw.githubusercontent, zip через codeload, проверка раз в 6 ч) + `core/update_helper.py` (отдельный процесс из
   `data/update/helper.py`: ждёт выхода, копия в `data/backup/v<old>`, ставит файлы, pip при новом requirements.txt, ждёт `/ping` 60 с, иначе откат).
   Результат — `data/update/result.json`, его показывает новая версия при старте. Версия — файл `VERSION`.
-- `ui/` — HUD (index.html, style.css, app.js): реактор на canvas, панели, чат, флаги 👁/🔕/🎮/📱 в шапке, окно настроек с 13 вкладками.
+- `ui/` — HUD (index.html, style.css, app.js): реактор на canvas, панели, чат, флаги 👁/🔕/🎮/📱 в шапке, окно настроек с 14 вкладками (первая — «⭐ Pro»).
 - `core/config.py` — DEFAULTS + SCHEMA/`coerce()` (всё, что меняется из UI, проходит через coerce).
 - Данные: `config.json` (там API-ключ и токен Telegram!), `data/data.json` (таймеры, задачи, заметки, память, история, режимы, тихий режим), `jarvis.log`.
 
@@ -40,6 +40,7 @@
 .venv\Scripts\python.exe selftest.py --only new   :: режимы, тихий режим, игры, репетитор, Telegram-агент, Live «вижу экран» и режим словами
 .venv\Scripts\python.exe selftest.py --only watch :: 4 способа передать кадр экрана в Live (все рабочие)
 .venv\Scripts\python.exe restart_jarvis.py        :: перезапуск запущенного Джарвиса
+.venv\Scripts\python.exe tools\make_key.py "Имя"   :: выпустить свой ключ Pro (только у владельца)
 ```
 Отчёт самотеста: `data/selftest_report.txt`. Синтетические записи для теста активации: `data/test/`.
 После изменений в `core/` Джарвиса нужно перезапустить (кнопка в «Диагностике» или `restart_jarvis.py`); файлы `ui/` подхватываются при обновлении окна.
@@ -62,6 +63,17 @@
   иначе отвечает «экран не транслируется». Поэтому при включении кнопкой отправляется `[СИСТЕМА: …]`.
 - В описании `routine_save` не давать пример с `wait` — модель начинает вставлять паузы, о которых не просили.
 - Тест-детектор «не вижу»: только с границей слова (`(?<!\w)не вижу`) — «экраНЕ ВИЖУ» даёт ложное срабатывание.
+
+## Бесплатная версия и Pro
+
+- `core/license.py`: `PRO_TOOLS` (routine_*, quiet_mode, watch_screen), `PRO_PERSONAS` (tutor), плюс проактивность/брифинг и Telegram
+  проверяют `Assistant.pro`. Gating инструментов — в `Toolbox.call` (возвращает `pro_only`, модель предлагает Pro); UI — класс `body.free` и 🔒.
+- Ключи Gumroad: проверка `api.gumroad.com/v2/licenses/verify` (нужен `GUMROAD_PRODUCT_ID` в license.py), раз в 3 дня, офлайн-запас 14 дней.
+- Свои ключи `PRO-<payload>.<подпись Ed25519>`: `tools/make_key.py "Имя" [--days N]`. Секрет — `data/license_private.key` ТОЛЬКО на ноутбуке
+  владельца (никогда не коммитить, не показывать). Открытый ключ — `PUBLIC_KEY` в license.py; Ed25519 на чистом Python — `core/ed25519.py`.
+- Код публичный — защита рассчитана на честных пользователей, не на взлом. Не добавлять сюда «секретов».
+- Подключение магазина: создать товар на Gumroad с галочкой «Generate a unique license key», вписать product_id и ссылку
+  в `GUMROAD_PRODUCT_ID` / `BUY_URL`, поднять версию.
 
 ## Как выпустить обновление
 

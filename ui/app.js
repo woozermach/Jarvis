@@ -356,7 +356,7 @@ setInterval(clock, 1000); clock();
 /* ───────────── настройки ───────────── */
 const ACCENTS = ["#4fe3ff", "#5b8cff", "#a78bfa", "#ff5fa2", "#ff5468", "#ffb648", "#4ff0a6", "#e8f1f5"];
 const TAB_TITLES = { main: "Основное", voice: "Голос и характер", wake: "Активация", sound: "Звук", tools: "Возможности",
-  apps: "Программы", memory: "Память", ai: "ИИ и ключ", diag: "Диагностика", routines: "Режимы",
+  pro: "Pro-версия", apps: "Программы", memory: "Память", ai: "ИИ и ключ", diag: "Диагностика", routines: "Режимы",
   proactive: "Проактивность", games: "Игры и экран", phone: "Телефон (Telegram)" };
 const RANGES = ["wake_threshold", "wake_verify_threshold", "idle_timeout", "vad_silence_ms", "mic_gain", "card_autoclose",
   "proactive_gpu_temp", "proactive_battery", "proactive_disk_gb", "proactive_game_hours", "watch_interval", "watch_idle_timeout"];
@@ -399,6 +399,7 @@ function fillForm(st) {
   for (const k of TOGGLES) $("#s_" + k).checked = !!c[k];
   for (const k of RANGES) { $("#s_" + k).value = c[k] ?? 0; $("#v_" + k).textContent = c[k] || ({ card_autoclose: "выкл", proactive_game_hours: "выкл" }[k] ?? c[k]); }
   renderUpdate(st.update || {});
+  renderLicense(st.license || {});
   $("#tgTokInfo").textContent = c.has_tg_token ? `Сохранён токен ${c.telegram_token}` : "Токен не задан.";
   renderTg(st.telegram || {});
   $("#fTg").classList.toggle("hidden", !(st.telegram && st.telegram.ok && st.telegram.bound));
@@ -407,7 +408,7 @@ function fillForm(st) {
   $("#hsInfo").textContent = st.speaker.headset ? `— сейчас гарнитура: ${st.speaker.name}, перебивать можно` : "— сейчас динамики, перебить можно словами «Эй, Джарвис»";
   $("#hkInfo").textContent = st.hotkey_ok === false ? "⚠ Это сочетание занято другой программой — выберите другое." : "Кликните в поле и нажмите нужное сочетание (например Ctrl+Alt+J).";
   $("#s_voice").innerHTML = Object.entries(st.voices).map(([k, v]) => `<option value="${k}" ${k === c.voice ? "selected" : ""}>${esc(v)}</option>`).join("");
-  $("#personaCards").innerHTML = Object.entries(st.personas).map(([k, v]) => { const [t, d] = v.split(" — "); return `<button data-v="${k}" class="${k === c.persona ? "on" : ""}"><b>${esc(t)}</b>${esc(d || "")}</button>`; }).join("");
+  $("#personaCards").innerHTML = Object.entries(st.personas).map(([k, v]) => { const [t, d] = v.split(" — "); return `<button data-v="${k}" class="${k === c.persona ? "on" : ""} ${k === "tutor" ? "lockable" : ""}"><b>${esc(t)}</b>${esc(d || "")}</button>`; }).join("");
   document.querySelectorAll("#seg_reply_length button").forEach((b) => b.classList.toggle("on", b.dataset.v === c.reply_length));
   $("#swatches").innerHTML = ACCENTS.map((h) => `<button data-v="${h}" style="background:${h};color:${h}" class="${h === c.accent ? "on" : ""}"></button>`).join("");
   const dev = (list, cur) => `<option value="">По умолчанию Windows</option>` + list.map((d) => `<option value="${d.id}" ${d.id === cur ? "selected" : ""}>${esc(d.name)}</option>`).join("");
@@ -462,6 +463,24 @@ function renderTg(t) {
   else h = `✅ Бот <b>@${esc(t.bot)}</b> привязан к вашему телефону. Пишите ему — Джарвис ответит.`;
   $("#tgStatus").innerHTML = h;
 }
+function renderLicense(l) {
+  const pro = !!l.pro;
+  S.pro = pro;
+  document.body.classList.toggle("free", !pro);
+  $("#proBadge").classList.toggle("hidden", !pro);
+  $("#proCard").classList.toggle("on", pro);
+  $("#proStatus").textContent = pro ? "⭐ Pro активирован" : "Бесплатная версия";
+  const exp = l.expires ? ` · до ${new Date(l.expires * 1000).toLocaleDateString("ru")}` : "";
+  $("#proSub").textContent = pro ? (l.name ? `Лицензия: ${l.name}` : "") + exp + (l.kind === "gumroad" ? " · куплено на Gumroad" : l.kind === "offline" ? " · личный ключ" : "")
+    : "Все основные функции бесплатны навсегда. Pro добавляет то, что справа.";
+  $("#proList").innerHTML = Object.values(l.features || {}).map((f) => `<li>${esc(f)}</li>`).join("");
+  $("#proBuy").classList.toggle("hidden", !l.buy_url || pro); if (l.buy_url) $("#proBuy").href = l.buy_url;
+  $("#proNoShop").classList.toggle("hidden", !!l.buy_url || pro);
+  $("#licDel").classList.toggle("hidden", !l.has_key);
+  $("#licInfo").textContent = l.error ? "⚠ " + l.error : l.has_key ? "Ключ сохранён." : "";
+}
+$("#licAct").onclick = () => { const k = $("#licKey").value.trim(); if (!k) return; $("#licInfo").textContent = "Проверяю…"; send({ t: "license_activate", key: k }); $("#licKey").value = ""; };
+$("#licDel").onclick = () => { if (confirm("Удалить ключ? Джарвис станет бесплатной версией.")) send({ t: "license_activate", key: "" }); };
 function renderUpdate(u) {
   if (!u || !u.current) return;
   S.update = u;

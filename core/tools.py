@@ -214,6 +214,11 @@ class Toolbox:
     def call(self, name, args):
         if name in self.disabled():
             return {"error": "эта возможность отключена в настройках Джарвиса"}
+        from .license import PRO_TOOLS
+        if name in PRO_TOOLS and not getattr(self.ctx, "pro", True):
+            self.ctx.toast("⭐ Это функция Pro — Настройки → Pro")
+            return {"error": "pro_only", "say": "Это возможность Pro-версии. Коротко скажи, что её можно включить в настройках, "
+                                                "раздел Pro, и не пытайся сделать то же другими функциями."}
         fn = getattr(self, "t_" + (name or ""), None)
         if fn is None:
             return {"error": f"нет функции {name}"}

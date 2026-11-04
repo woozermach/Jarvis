@@ -82,9 +82,12 @@ PROMPT = """Ты — ДЖАРВИС, персональный ИИ-ассист�
 {routines}{briefing}{memory}{history}"""
 
 
-def build_prompt(cfg, now, memory="", history="", routines="", briefing=""):
+def build_prompt(cfg, now, memory="", history="", routines="", briefing="", pro=True):
     user = cfg.get("user_name") or "сэр"
     persona = cfg.get("persona", "butler")
+    from .license import PRO_PERSONAS
+    if not pro and persona in PRO_PERSONAS:
+        persona = "butler"
     character = CHARACTER.get(persona, CHARACTER["butler"]).format(user=user)
     if persona == "custom" and not cfg.get("custom_instructions"):
         character = CHARACTER["butler"].format(user=user)
@@ -94,6 +97,9 @@ def build_prompt(cfg, now, memory="", history="", routines="", briefing=""):
     custom = ""
     if (cfg.get("custom_instructions") or "").strip():
         custom = "\nОсобые указания пользователя (соблюдай их в первую очередь):\n" + cfg["custom_instructions"].strip() + "\n"
+    if not pro:
+        custom += ("\nЭто бесплатная версия. Режимы, тихий режим, «вижу экран», репетитор, Telegram-бот и проактивность — "
+                   "функции Pro: если о них просят, коротко скажи, что их можно включить в Настройках → Pro.\n")
     return PROMPT.format(character=character, length=LENGTH.get(cfg.get("reply_length"), LENGTH["short"]),
                          lang=LANG.get(cfg.get("reply_language"), LANG["auto"]), danger=danger, custom=custom,
                          now=now, city=cfg.get("city", ""), memory=memory, history=history,
@@ -155,6 +161,8 @@ class Assistant:
         self.telegram = None
         from .updater import Updater
         self.updater = Updater(self)
+        from .license import License
+        self.license = License(self.cfg)
         self._briefing_due = False
         self._watch_task = None
 
@@ -176,7 +184,7 @@ class Assistant:
         asyncio.create_task(self._init_models())
         asyncio.create_task(self._push_when_indexed())
         for coro in (self._levels_loop(), self._stats_loop(), self._weather_loop(), self._timers_loop(), self._idle_loop(),
-                     self._proactive_loop(), self._update_loop()):
+                     self._proactive_loop(), self._update_loop(), self._license_loop()):
             asyncio.create_task(coro)
         self.restart_telegram()
         from .desktop import start_hotkey, start_tray, open_window as ow
@@ -314,7 +322,8 @@ class Assistant:
                 "speaker": {"ok": self.audio.spk_ok, "name": self.audio.spk_name, "headset": self.audio.spk_is_headset},
                 "live_error": self.live_error, "port": getattr(self, "port", 0),
                 "telegram": self.tg_status(), "quiet_until": self.store.data.get("quiet_until", 0),
-                "watch": self.watch_on, "gaming_since": self.game_since, "update": self.updater.info}
+                "watch": self.watch_on, "gaming_since": self.game_since, "update": self.updater.info,
+                "license": self.license.info()}
 
     def snapshot(self):
         return {"t": "snapshot", "state": self.state, "detail": self.state_detail, "store": self.store.snapshot(),
@@ -350,8 +359,8 @@ class Assistant:
         rs = self.store.snapshot()["routines"]
         routines = ("- Сохранённые режимы: " + "; ".join(
             f"«{r['name']}» ({', '.join(self.tools.describe_step(x) for x in r['steps'][:6])})" for r in rs) + "\n") if rs else ""
-        briefing = self._briefing_block(n) if briefing else ""
-        prompt = build_prompt(self.cfg, now, memory, history, routines, briefing)
+        briefing = self._briefing_block(n) if briefing and self.pro else ""
+        prompt = build_prompt(self.cfg, now, memory, history, routines, briefing, pro=self.pro)
         return {
             "generationConfig": {"responseModalities": ["AUDIO"],
                                  "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": self.cfg.get("voice", "Charon")}}}},
@@ -750,6 +759,8 @@ class Assistant:
     # ════════════════════════ режим «вижу экран» ════════════════════════
     def set_watch(self, on):
         """Можно вызывать из любого потока."""
+        if on and not self.pro:
+            return {"error": "«Вижу экран» — функция Pro (Настройки → Pro)"}
         if on and not (self.session and self.session.alive):
             return {"error": "этот режим работает во время разговора"}
         self.watch_on = bool(on)
@@ -823,7 +834,7 @@ class Assistant:
             log.info("игра закончилась (%.0f мин)", (now - self.game_since) / 60)
             self.game_since = 0.0
             self._said.pop("game_long", None)
-        if not self.cfg.get("proactive", True):
+        if not self.cfg.get("proactive", True) or not self.pro:
             return
         temp = float(g.get("temp", 0) or 0)
         self._gpu_hot = self._gpu_hot + 1 if temp >= int(self.cfg.get("proactive_gpu_temp", 87)) else 0
@@ -887,6 +898,28 @@ class Assistant:
         else:
             await self.start_session(chime=True, initial_text=msg, silent_fail=True, briefing=False)
 
+    # ════════════════════════ лицензия ════════════════════════
+    @property
+    def pro(self):
+        return self.license.pro
+
+    async def _license_loop(self):
+        while True:
+            was = self.pro
+            try:
+                await asyncio.to_thread(self.license.refresh)
+            except Exception:
+                log.exception("license")
+            if was != self.pro:
+                self.on_license_changed()
+            await asyncio.sleep(6 * 3600)
+
+    def on_license_changed(self):
+        if not self.pro and self.watch_on:
+            self.set_watch(False)
+        self.restart_telegram()
+        self.push_settings()
+
     # ════════════════════════ обновления ════════════════════════
     def push_update(self):
         self._threadsafe({"t": "update", "data": self.updater.info})
@@ -925,13 +958,15 @@ class Assistant:
         if self.telegram:
             self.telegram.stop()
             self.telegram = None
-        if self.cfg.get("telegram_enabled") and (self.cfg.get("telegram_token") or "").strip():
+        if self.cfg.get("telegram_enabled") and (self.cfg.get("telegram_token") or "").strip() and self.pro:
             self.telegram = TelegramBot(self)
             self.telegram.start()
 
     def tg_status(self):
         if not self.cfg.get("telegram_enabled"):
             return {"on": False}
+        if not self.pro:
+            return {"on": True, "error": "Telegram-бот — функция Pro (Настройки → Pro)"}
         if not self.telegram:
             return {"on": True, "error": "нет токена бота"}
         return self.telegram.status()
@@ -1020,18 +1055,27 @@ class Assistant:
         elif t == "routine_run":
             r = self.store.find_routine(msg.get("id") or "")
             if r:
-                res = await asyncio.to_thread(self.tools.t_routine_run, r["id"])
-                self.toast(f"⚙ «{r['name']}»: выполнено {len(res.get('done', []))}" +
-                           (f", ошибки: {'; '.join(res['errors'])[:120]}" if res.get("errors") else ""))
+                res = await asyncio.to_thread(self.tools.call, "routine_run", {"name": r["id"]})
+                if res.get("error") != "pro_only":
+                    self.toast(f"⚙ «{r['name']}»: выполнено {len(res.get('done', []))}" +
+                               (f", ошибки: {'; '.join(res['errors'])[:120]}" if res.get("errors") else ""))
         elif t == "routine_delete":
             self.store.delete_routine(msg.get("id") or "")
         elif t == "routine_save":
             d = msg.get("data") or {}
-            res = await asyncio.to_thread(self.tools.t_routine_save, d.get("name", ""), d.get("steps", []), d.get("description", ""))
-            if isinstance(res, dict) and res.get("error"):
+            res = await asyncio.to_thread(self.tools.call, "routine_save", {"name": d.get("name", ""), "steps": d.get("steps", []),
+                                                                           "description": d.get("description", "")})
+            if isinstance(res, dict) and res.get("error") and res["error"] != "pro_only":
                 self.toast("Режим не сохранён: " + "; ".join([res["error"]] + res.get("problems", [])))
         elif t == "quiet":
-            await asyncio.to_thread(self.tools.t_quiet_mode, msg.get("minutes", 60), not msg.get("on", True))
+            await asyncio.to_thread(self.tools.call, "quiet_mode", {"minutes": msg.get("minutes", 60), "off": not msg.get("on", True)})
+        elif t == "license_activate":
+            info = await asyncio.to_thread(self.license.activate, msg.get("key", ""))
+            self.toast("⭐ Pro активирован" + (f": {info['name']}" if info.get("name") else "") if info["pro"]
+                       else ("Ключ удалён — бесплатная версия" if not info["has_key"] else "Ключ не принят: " + info.get("error", "")))
+            self.on_license_changed()
+        elif t == "watch" and msg.get("on") and not self.pro:
+            self.toast("⭐ «Вижу экран» — функция Pro (Настройки → Pro)")
         elif t == "watch":
             if msg.get("on"):
                 if not (self.session and self.session.alive):
