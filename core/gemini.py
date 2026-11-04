@@ -156,7 +156,8 @@ class Gemini:
         for m in self.tts_models or TTS_PREF:
             if self.bad.get(m, 0) > time.time():
                 continue
-            body = {"contents": [{"parts": [{"text": f"Произнеси спокойно и уверенно: {text}"}]}],
+            # только сам текст: новые TTS-модели зачитывают указания вроде «произнеси спокойно» вслух
+            body = {"contents": [{"parts": [{"text": text}]}],
                     "generationConfig": {"responseModalities": ["AUDIO"],
                                          "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}}}
             try:

@@ -11,7 +11,9 @@ SITE = "https://github.com/woozermach/Jarvis"
 
 # как распознаватель речи может услышать имя (ru/uk/en/de/fr/es/it/pl/sk/cs)
 WAKE_WORDS = {
-    "sayro": r"сайр[оауы]|саир[оа]|сай\s?ро|s[ae]y\s?ro|sai\s?ro|sayr[oa]|seiro|sajro|sejro|cairo|kairo|кайро",
+    # распознаватель не знает слова «Sayro» и слышит его как Sarah / Siro / Сайру — эти варианты тоже считаются
+    "sayro": (r"сайр[оауые]?\b|саир[оа]|сай\s?ро|айр[оау]\b|s[ae]y\s?ro|sai\s?ro|sayr[oa]|seiro|sajro|sejro|"
+              r"\bsiro\b|\bsyro\b|\bsairo\b|\bsarah?\b|\bsero\b|cairo|kairo|кайро|\bсиро\b|\bсара\b"),
     "jarvis": r"(?:дж|ж|ч|д)[аеэ]р?[вб][иы]с|jarvis|джарви",
 }
 

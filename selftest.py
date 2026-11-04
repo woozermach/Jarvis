@@ -594,6 +594,25 @@ def main():
         tb.t_routine_delete("Самотест два")
         ctx.store.cancel_timer(label="провер")
         return
+    if ONLY == "wake2":
+        t_models()
+        from core.brand import wake_re
+        from core.stt import transcribe
+        from core.audio import resample
+        import numpy as np
+        rx = wake_re("sayro")
+        for phrase, lang in [("Эй, Сайро, который час?", "ru-RU"), ("Сайро, открой стим", "ru-RU"), ("Hey Sayro, what time is it?", "en-US"),
+                             ("Hallo Sayro, wie spät ist es?", "de-DE"), ("Hej Sayro, która godzina?", "pl-PL")]:
+            r = G.tts(phrase, cfg.get("voice", "Charon"))
+            if not r:
+                rec("wake2 tts " + phrase, False, "нет TTS")
+                continue
+            pcm = resample(np.frombuffer(r[0], dtype=np.int16), r[1], 16000).astype(np.int16).tobytes()
+            t1 = transcribe(pcm, "", lang)
+            t2 = transcribe(pcm, "", "en-US") if not rx.search(t1 or "") else ""
+            ok = bool(rx.search(t1 or "") or rx.search(t2 or ""))
+            rec(f"«Сайро» в речи: {phrase}", ok, f"{lang}: «{t1}»" + (f" | en-US: «{t2}»" if t2 else ""))
+        return
     if ONLY == "i18n":
         import runpy
         sys.argv = [sys.argv[0]]

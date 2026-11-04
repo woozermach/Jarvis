@@ -1233,7 +1233,7 @@ class Assistant:
         if not py.exists():
             py = sys.executable
         args = [str(py), str(BASE / "selftest.py")] + ([] if full else ["--quick"])
-        if only in ("click", "new", "watch", "update", "i18n"):
+        if only in ("click", "new", "watch", "update", "i18n", "wake2"):
             args += ["--only", only]
         self.broadcast({"t": "selftest", "line": "▶ Запускаю самопроверку…", "start": True})
         env = dict(__import__("os").environ, PYTHONIOENCODING="utf-8")
