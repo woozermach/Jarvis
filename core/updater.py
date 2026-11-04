@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Обновления через GitHub Releases: проверка, скачивание, проверка целостности и запуск установщика."""
+"""Обновления из GitHub (файл VERSION в ветке main): проверка, скачивание, проверка целостности и запуск установщика."""
 import io
 import json
 import logging
@@ -46,29 +46,47 @@ class Updater:
         h = {"Accept": "application/vnd.github+json", "User-Agent": "jarvis-updater"}
         return requests.get(url, headers=h, timeout=kw.pop("timeout", 15), **kw)
 
+    def _changelog(self, text, cur, latest):
+        """Разделы CHANGELOG.md «## 2.1.1 …» новее текущей версии и не новее latest."""
+        out, keep = [], False
+        for line in text.splitlines():
+            m = re.match(r"^##\s*v?(\d+(?:\.\d+)*)", line)
+            if m:
+                v = vtuple(m.group(1))
+                keep = vtuple(cur) < v <= vtuple(latest)
+                if keep:
+                    out.append(f"**{line.lstrip('# ').strip()}**")
+                continue
+            if keep:
+                out.append(line)
+        return "\n".join(out).strip()[:4000]
+
     def check(self):
+        """Новая версия = номер в VERSION ветки main больше текущего. Выпуск = просто push в main."""
         cur = current_version()
         info = {"current": cur, "available": False, "checked": time.time(), "repo": self.repo}
         if not self.repo:
             info["error"] = "не задан репозиторий обновлений"
             self.info = info
             return info
+        branch = (self.cfg.get("update_branch") or "main").strip()
+        raw = f"https://raw.githubusercontent.com/{self.repo}/{branch}"
         try:
-            r = self._get(f"https://api.github.com/repos/{self.repo}/releases/latest")
+            r = self._get(f"{raw}/VERSION?t={int(time.time())}")
             if r.status_code == 404:
-                info["error"] = "в репозитории ещё нет выпусков"
-            elif r.status_code == 403:
-                info["error"] = "GitHub временно ограничил проверки, попробую позже"
+                info["error"] = "в репозитории ещё нет файла VERSION"
             else:
                 r.raise_for_status()
-                j = r.json()
-                latest = (j.get("tag_name") or "").lstrip("vV")
-                info.update(latest=latest, notes=(j.get("body") or "").strip()[:4000], url=j.get("html_url", ""),
-                            published=j.get("published_at", "")[:10], zip=j.get("zipball_url", ""),
-                            available=vtuple(latest) > vtuple(cur))
-                asset = next((a for a in j.get("assets", []) if a.get("name", "").lower().endswith(".zip")), None)
-                if asset:
-                    info["zip"] = asset["browser_download_url"]
+                latest = r.text.strip()
+                info.update(latest=latest, available=vtuple(latest) > vtuple(cur), branch=branch,
+                            url=f"https://github.com/{self.repo}", zip=f"https://codeload.github.com/{self.repo}/zip/refs/heads/{branch}")
+                if info["available"]:
+                    try:
+                        cl = self._get(f"{raw}/CHANGELOG.md?t={int(time.time())}")
+                        if cl.ok:
+                            info["notes"] = self._changelog(cl.text, cur, latest)
+                    except Exception:
+                        pass
         except Exception as e:
             info["error"] = f"нет связи с GitHub: {str(e)[:120]}"
         self.info = info
@@ -103,8 +121,8 @@ class Updater:
                 if not (src / need).exists():
                     raise RuntimeError(f"в выпуске нет {need}")
             ver = (src / "VERSION").read_text(encoding="utf-8").strip()
-            if vtuple(ver) != vtuple(info["latest"]):
-                raise RuntimeError(f"версия в файлах ({ver}) не совпадает с выпуском ({info['latest']})")
+            if vtuple(ver) <= vtuple(info["current"]):
+                raise RuntimeError(f"в скачанных файлах версия {ver} — не новее текущей")
             for py in src.rglob("*.py"):  # битый файл не должен попасть на диск
                 compile(py.read_text(encoding="utf-8"), str(py), "exec")
             helper = UPD / "helper.py"

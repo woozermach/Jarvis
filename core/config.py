@@ -112,6 +112,7 @@ DEFAULTS = {
     "telegram_notify": True,     # присылать таймеры и предупреждения
     # обновления
     "update_repo": "woozermach/Jarvis",
+    "update_branch": "main",
     "update_auto_check": True,
     "port": 8765,
     "apps": {},
@@ -139,7 +140,7 @@ SCHEMA = {
     "watch_interval": ("float", 0.5, 10), "watch_idle_timeout": ("int", 15, 600),
     "clip_method": ("choice", ["auto", "nvidia", "gamebar"]),
     "discord_mute_key": ("str", 40), "discord_deafen_key": ("str", 40),
-    "update_repo": ("str", 100), "update_auto_check": ("bool",),
+    "update_repo": ("str", 100), "update_branch": ("str", 60), "update_auto_check": ("bool",),
     "telegram_enabled": ("bool",), "telegram_notify": ("bool",), "telegram_token": ("str", 120), "telegram_chat_id": ("int", 0, 10**15),
 }
 
