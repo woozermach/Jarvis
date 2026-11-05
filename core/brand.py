@@ -8,6 +8,14 @@ TAGLINE = "Your voice for your PC"
 APP_ID = "oswin"                                # имя ярлыка автозапуска, окна и т.п.
 WINDOW_TITLE = NAME
 LEGACY_TITLES = ("Sayro", "J.A.R.V.I.S")       # окна прежних версий — тоже «свои»
+_OWN_TITLES = {WINDOW_TITLE, "Sayro", "J.A.R.V.I.S", "J.A.R.V.I.S."}
+
+
+def is_own_window(title, legacy=True):
+    """Окно интерфейса — только при ТОЧНОМ совпадении заголовка. По началу строки нельзя:
+    вкладка браузера с нашим сайтом («Oswin — the voice assistant… - Microsoft Edge») тоже начинается с «Oswin»."""
+    t = (title or "").strip()
+    return t == WINDOW_TITLE or (legacy and t in _OWN_TITLES)
 LEGACY_NAMES = ("Sayro", "J.A.R.V.I.S.")        # прежние имена ярлыков автозапуска
 SITE = "https://woozermach.github.io/Jarvis/"
 

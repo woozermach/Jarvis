@@ -38,7 +38,7 @@ def _close_legacy_windows():
         if n:
             b = ctypes.create_unicode_buffer(n + 1)
             u.GetWindowTextW(h, b, n + 1)
-            if b.value.startswith("J.A.R.V.I.S"):  # «Sayro» (3.0) умеет перезагружаться сам — его не трогаем
+            if b.value.strip() in ("J.A.R.V.I.S", "J.A.R.V.I.S."):  # «Sayro» (3.0) умеет перезагружаться сам — его не трогаем
                 found.append(h)
         return True
     u.EnumWindows(PROC(cb), 0)
@@ -115,8 +115,8 @@ def _find_hwnd():
         if n:
             b = ctypes.create_unicode_buffer(n + 1)
             u.GetWindowTextW(h, b, n + 1)
-            from .brand import WINDOW_TITLE, LEGACY_TITLES
-            if b.value.startswith(WINDOW_TITLE) or b.value.startswith(LEGACY_TITLES):
+            from .brand import is_own_window
+            if is_own_window(b.value):
                 found.append(h)
         return True
     u.EnumWindows(PROC(cb), 0)

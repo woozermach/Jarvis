@@ -55,7 +55,7 @@ def _find_hwnd(title, pid):
             n = u.GetWindowTextLengthW(h)
             b = ctypes.create_unicode_buffer(n + 1)
             u.GetWindowTextW(h, b, n + 1)
-            if b.value.startswith(title):
+            if b.value.strip() == title:  # точно: вкладка браузера с сайтом тоже начинается с «Oswin»
                 found.append(h)
         return True
     u.EnumWindows(PROC(cb), 0)
