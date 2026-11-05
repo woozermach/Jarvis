@@ -1,0 +1,39 @@
+name: Publish wake model
+
+# Кладёт обученную модель из запуска «Wake word» в ветку wakeword-model (models/hey_oswin.onnx + журнал),
+# откуда её забирают в релиз.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run id of the Wake word workflow"
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: hey_oswin
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: art
+      - name: Commit to wakeword-model
+        run: |
+          find art -type f | xargs ls -la
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout -B wakeword-model
+          mkdir -p models/train
+          cp $(find art -name 'hey_oswin.onnx' | head -1) models/hey_oswin.onnx
+          cp $(find art -name 'train.log' | head -1) models/train/train-${{ inputs.run_id }}.log || true
+          cp $(find art -name 'cfg.yml' | head -1) models/train/cfg-${{ inputs.run_id }}.yml || true
+          git add -f models
+          git commit -m "wake model from run ${{ inputs.run_id }}"
+          git push -f origin wakeword-model
