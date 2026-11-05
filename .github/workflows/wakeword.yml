@@ -55,7 +55,7 @@ jobs:
         run: |
           N=$(( ${{ inputs.n_samples }} / ${{ inputs.shards }} ))
           mkdir -p $W/data/mit_rirs $W/data/background
-          python tools/wakeword/make_config.py $W/oww/examples/custom_model.yml $W/cfg.yml $W $N ${{ inputs.steps }} > /dev/null
+          python tools/wakeword/make_config.py $W/oww/examples/custom_model.yml $W/cfg.yml $W $N ${{ inputs.steps }} ${{ inputs.shards }} > /dev/null
           cd $W
           python $GITHUB_WORKSPACE/tools/wakeword/run_train.py oww/openwakeword/train.py --training_config cfg.yml --generate_clips 2>&1 \
             | (grep -vE "it/s\]|Batch [0-9]+/[0-9]+ complete|connectionpool" || true)

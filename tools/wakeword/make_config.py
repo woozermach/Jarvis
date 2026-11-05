@@ -6,6 +6,7 @@ import yaml
 src, dst, work = sys.argv[1], sys.argv[2], sys.argv[3]
 n = int(sys.argv[4]) if len(sys.argv) > 4 else 15000
 steps = int(sys.argv[5]) if len(sys.argv) > 5 else 30000
+shards = int(sys.argv[6]) if len(sys.argv) > 6 else 1   # на сколько машин делится генерация (n — уже доля одной)
 c = yaml.safe_load(open(src))
 c.update({
     "model_name": "hey_oswin",
@@ -16,7 +17,7 @@ c.update({
                                 "own win", "so win", "always win", "hey siri", "hey google", "hey jarvis",
                                 "hey alexa", "o's win", "hey jasmine", "us win", "oz", "wins"],
     "n_samples": n,
-    "n_samples_val": max(1000, n // 8),
+    "n_samples_val": max(20, max(min(1000, n * shards), n * shards // 8) // shards),
     "tts_batch_size": 50,
     "augmentation_batch_size": 16,
     "augmentation_rounds": 2,
