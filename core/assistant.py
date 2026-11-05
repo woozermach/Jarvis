@@ -1074,6 +1074,8 @@ class Assistant:
             restart_jarvis()
         elif t == "quit":
             import os
+            from .desktop import close_window
+            await asyncio.to_thread(close_window)
             os._exit(0)
         elif t == "routine_run":
             r = self.store.find_routine(msg.get("id") or "")

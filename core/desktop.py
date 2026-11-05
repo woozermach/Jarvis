@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Окно (Edge в режиме приложения), значок в трее, глобальная горячая клавиша, уведомления."""
+"""Окно (WebView2 через core/window.py, запасной вариант — Edge --app), значок в трее, горячая клавиша, уведомления."""
 import ctypes
 import logging
 import os
@@ -49,7 +49,32 @@ def _close_legacy_windows():
     return len(found)
 
 
+def open_edge(url):
+    """Прежнее окно: Edge в режиме приложения (запасной вариант, если WebView2 недоступен)."""
+    edge = _edge_path() if IS_WIN else None
+    if edge:
+        prof = BASE / "data" / "edge_profile"
+        prof.mkdir(parents=True, exist_ok=True)
+        try:
+            return subprocess.Popen([edge, f"--app={url}", f"--user-data-dir={prof}", "--window-size=1440,900",
+                                     "--no-first-run", "--no-default-browser-check", "--disable-features=Translate",
+                                     "--autoplay-policy=no-user-gesture-required", "--disable-background-timer-throttling"],
+                                    creationflags=NO_WINDOW)
+        except Exception as e:
+            log.warning("Edge: %s", e)
+    webbrowser.open(url)
+
+
+def _pythonw():
+    import sys
+    for p in (BASE / ".venv" / "Scripts" / "pythonw.exe", Path(sys.executable).with_name("pythonw.exe")):
+        if p.exists():
+            return p
+    return Path(sys.executable)
+
+
 def open_window(port):
+    """Окно интерфейса: WebView2 (core/window.py, отдельный процесс) или Edge, если так выбрано/не получилось."""
     global _proc
     url = f"http://127.0.0.1:{port}/"
     if IS_WIN:
@@ -57,19 +82,24 @@ def open_window(port):
     if IS_WIN and _find_hwnd():  # окно уже открыто (например, после перезапуска) — просто показать
         focus_window(port)
         return
-    edge = _edge_path() if IS_WIN else None
-    if edge:
-        prof = BASE / "data" / "edge_profile"
-        prof.mkdir(parents=True, exist_ok=True)
-        try:
-            _proc = subprocess.Popen([edge, f"--app={url}", f"--user-data-dir={prof}", "--window-size=1440,900",
-                                      "--no-first-run", "--no-default-browser-check", "--disable-features=Translate",
-                                      "--autoplay-policy=no-user-gesture-required", "--disable-background-timer-throttling"],
-                                     creationflags=NO_WINDOW)
-            return
-        except Exception as e:
-            log.warning("Edge: %s", e)
-    webbrowser.open(url)
+    engine = "webview"
+    try:
+        import json
+        engine = json.loads((BASE / "config.json").read_text(encoding="utf-8")).get("window_engine", "webview")
+    except Exception:
+        pass
+    if IS_WIN and engine != "edge":
+        import importlib.util
+        if importlib.util.find_spec("webview"):
+            try:
+                _proc = subprocess.Popen([str(_pythonw()), str(BASE / "core" / "window.py"), url], cwd=str(BASE),
+                                         creationflags=NO_WINDOW)
+                return
+            except Exception as e:
+                log.warning("окно WebView2: %s", e)
+        else:
+            log.info("pywebview не установлен — окно Edge")
+    _proc = open_edge(url)
 
 
 def _find_hwnd():
@@ -97,6 +127,14 @@ def set_window_visible(visible):
     h = _find_hwnd()
     if h:
         ctypes.windll.user32.ShowWindow(h, 5 if visible else 0)  # SW_SHOW / SW_HIDE
+
+
+def close_window():
+    """Закрыть окно интерфейса (при полном выходе из ассистента)."""
+    h = _find_hwnd()
+    if h:
+        ctypes.windll.user32.PostMessageW(h, 0x0010, 0, 0)  # WM_CLOSE
+        time.sleep(0.3)
 
 
 def minimize_window():
@@ -270,6 +308,7 @@ def start_tray(assistant):
         assistant.loop.call_soon_threadsafe(assistant.broadcast, {"t": "mic", "on": assistant.mic_enabled})
 
     def quit_(icon, item):
+        close_window()
         icon.stop()
         os._exit(0)
 

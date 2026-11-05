@@ -86,6 +86,7 @@ DEFAULTS = {
     "sounds": True,
     # окно и система
     "open_window_on_start": True,
+    "window_engine": "webview",   # webview (WebView2) | edge (прежнее окно Edge --app)
     "autostart": False,
     "autostart_window": False,
     "accent": "#0A84FF",
@@ -138,7 +139,7 @@ SCHEMA = {
     "wake_threshold": ("float", 0.1, 0.95), "wake_verify_threshold": ("float", 0.0, 0.3),
     "idle_timeout": ("int", 4, 120), "vad_silence_ms": ("int", 250, 2500), "mic_gain": ("float", 0.3, 6.0),
     "port": ("int", 1024, 65000), "card_autoclose": ("int", 0, 600),
-    "headphones": ("bool",), "headphones_auto": ("bool",), "sounds": ("bool",), "open_window_on_start": ("bool",), "autostart": ("bool",),
+    "headphones": ("bool",), "headphones_auto": ("bool",), "sounds": ("bool",), "open_window_on_start": ("bool",), "window_engine": ("choice", ["webview", "edge"]), "autostart": ("bool",),
     "autostart_window": ("bool",), "show_system_panel": ("bool",), "show_weather_panel": ("bool",),
     "confirm_dangerous": ("bool",),
     "mic_device": ("device",), "speaker_device": ("device",),

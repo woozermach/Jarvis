@@ -69,13 +69,13 @@ Type: files; Name: "{userstartup}\Oswin.lnk"
 Type: files; Name: "{userstartup}\Sayro.lnk"
 
 [Code]
-{ Останавливает только копию Oswin из этой папки (по полному пути к jarvis.py). }
+{ Останавливает все python-процессы этой копии Oswin: ядро (jarvis.py), окно (core\window.py), помощник обновления. }
 procedure StopOswin(Dir: String);
 var
   Script, P: String;
   Rc: Integer;
 begin
-  P := Dir + '\jarvis.py';
+  P := AddBackslash(Dir);
   StringChangeEx(P, '''', '''''', True);
   Script := ExpandConstant('{tmp}');
   if Script = '' then Script := GetTempDir();
@@ -83,7 +83,8 @@ begin
   SaveStringToFile(Script,
     '$p = ''' + P + '''' + #13#10 +
     'Get-CimInstance Win32_Process -Filter "Name=''pythonw.exe'' OR Name=''python.exe''" | ' +
-    'Where-Object { $_.CommandLine -and $_.CommandLine.ToLower().Contains($p.ToLower()) } | ' +
+    'Where-Object { ($_.ExecutablePath -and $_.ExecutablePath.ToLower().StartsWith($p.ToLower())) -or ' +
+    '($_.CommandLine -and $_.CommandLine.ToLower().Contains($p.ToLower())) } | ' +
     'ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }' + #13#10, False);
   Exec('powershell.exe', '-NoProfile -ExecutionPolicy Bypass -File "' + Script + '"', '', SW_HIDE, ewWaitUntilTerminated, Rc);
   DeleteFile(Script);
