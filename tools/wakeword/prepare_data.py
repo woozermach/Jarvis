@@ -43,20 +43,47 @@ for f in list_repo_files(repo, repo_type="dataset"):
         n += 1
 print("RIR:", n)
 
-# 2) Background: two AudioSet balanced-train shards (speech, music, noise)
+# 2) Background: несколько файлов сбалансированной части AudioSet (речь, музыка, шумы); формат репозитория менялся —
+#    ищем и .tar (flac внутри), и .parquet (байты аудио в колонке)
 bg = out / "background"
 bg.mkdir(parents=True, exist_ok=True)
 m = 0
-for shard in ("bal_train09.tar", "bal_train03.tar"):
-    p = hf_hub_download("agkphysics/AudioSet", f"data/{shard}", repo_type="dataset")
-    with tarfile.open(p) as tar:
-        for mem in tar:
-            if not mem.name.endswith(".flac"):
-                continue
-            try:
-                x, sr = sf.read(io.BytesIO(tar.extractfile(mem).read()), dtype="float32")
-                sf.write(bg / (Path(mem.name).stem + ".wav"), to16k(x, sr), 16000)
-                m += 1
-            except Exception as e:
-                print("skip", mem.name, e)
+files = sorted(f for f in list_repo_files("agkphysics/AudioSet", repo_type="dataset")
+               if ("bal" in f.lower()) and f.endswith((".tar", ".parquet")))
+print("AudioSet files:", len(files), files[:5])
+want = int(sys.argv[2]) if len(sys.argv) > 2 else 6000  # сколько клипов по ~10 с (≈ 16 часов)
+
+
+def put(raw, name):
+    global m
+    try:
+        x, sr = sf.read(io.BytesIO(raw), dtype="float32")
+        if len(x) / sr >= 1.0:
+            sf.write(bg / (Path(name).stem + ".wav"), to16k(x, sr), 16000)
+            m += 1
+    except Exception as e:
+        print("skip", name, e)
+
+
+for f in files:
+    if m >= want:
+        break
+    p = hf_hub_download("agkphysics/AudioSet", f, repo_type="dataset")
+    if f.endswith(".tar"):
+        with tarfile.open(p) as tar:
+            for mem in tar:
+                if mem.name.endswith((".flac", ".wav", ".mp3")) and m < want:
+                    put(tar.extractfile(mem).read(), mem.name)
+    else:
+        pf = pq.ParquetFile(p)
+        col = next((c for c in pf.schema_arrow.names if "audio" in c.lower() or c == "flac"), None)
+        for batch in pf.iter_batches(columns=[col], batch_size=64):
+            for i, a in enumerate(batch.to_pydict()[col]):
+                if m >= want:
+                    break
+                if isinstance(a, dict):
+                    put(a.get("bytes"), a.get("path") or f"as{m}.wav")
+                elif isinstance(a, (bytes, bytearray)):
+                    put(a, f"as{m}.wav")
+    print(f, "→", m)
 print("background:", m)
