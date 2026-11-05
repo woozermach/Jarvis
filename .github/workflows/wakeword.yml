@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
-      fail-fast: true
+      fail-fast: false   # если GitHub выключит одну машину, обучаемся на клипах остальных
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     steps:
@@ -69,6 +69,7 @@ jobs:
 
   train:
     needs: gen
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 340
     steps:
