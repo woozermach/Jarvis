@@ -74,6 +74,12 @@ class Wake:
         self.model_file = _custom_model(self.word)
         if self.word != "jarvis" and not self.model_file and eng in ("auto", "openwakeword"):
             eng = "google"  # локальной модели для этого имени нет — только распознавание речи
+        # пороги: для своей модели мгновенное срабатывание строже, а «похоже на имя» проверяется речью
+        self._fast_thr = float(cfg.get("wake_threshold", 0.5))
+        self._verify_thr = float(cfg.get("wake_verify_threshold", 0.002))
+        if self.model_file:
+            self._fast_thr = max(self._fast_thr, 0.75)
+            self._verify_thr = max(self._verify_thr, 0.1)
         if eng == "off":
             self.status = "off"
             return
@@ -122,11 +128,11 @@ class Wake:
                 log.warning("oww predict: %s", e)
                 return
             self.score = s
-            if s >= float(self.cfg.get("wake_threshold", 0.5)):
+            if s >= self._fast_thr:
                 self.stats["fast"] += 1
                 self._fire(None, s)
                 return
-            if self.verify_ok and s >= float(self.cfg.get("wake_verify_threshold", 0.002)) and self._cand is None:
+            if self.verify_ok and s >= self._verify_thr and self._cand is None:
                 self._cand = time.time()
                 self._after = 0
             if self._cand is not None:

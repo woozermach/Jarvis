@@ -594,6 +594,43 @@ def main():
         tb.t_routine_delete("Самотест два")
         ctx.store.cancel_timer(label="провер")
         return
+    if ONLY == "wake3":
+        # своя модель «Hey Oswin»: голоса Gemini (не Piper, на котором училась модель) на разных языках + похожие слова
+        t_models()
+        import numpy as np
+        from core.audio import resample
+        from core.wake import _stub_sklearn_dependency, _custom_model
+        _stub_sklearn_dependency()
+        from openwakeword.model import Model
+        mf = _custom_model("oswin")
+        if not mf:
+            rec("wake3 model", False, "нет models/hey_oswin.onnx")
+            return
+        m = Model(wakeword_models=[str(mf)], inference_framework="onnx")
+        voices = ["Charon", "Kore", "Puck", "Aoede", "Fenrir"]
+        tests = [("Hey Oswin, what time is it?", True), ("Эй, Освин, который час?", True), ("Oswin, open Steam.", True),
+                 ("Hallo Oswin, wie spät ist es?", True), ("Hej Oswin, która godzina?", True), ("Ahoj Oswin, koľko je hodín?", True),
+                 ("Hey Austin, what time is it?", False), ("I was in Boston last week.", False), ("That's awesome, thank you.", False),
+                 ("Привет, как дела, что нового?", False), ("Hey Siri, set a timer.", False)]
+        for i, (phrase, pos) in enumerate(tests):
+            r = None
+            for _ in range(3):
+                r = G.tts(phrase, voices[i % len(voices)])
+                if r:
+                    break
+                time.sleep(20)
+            if not r:
+                rec(f"wake3 tts {phrase}", False, "нет TTS (лимит?)")
+                continue
+            x = resample(np.frombuffer(r[0], dtype=np.int16), r[1], 16000).astype(np.int16)
+            x = np.concatenate([np.zeros(16000, np.int16), x, np.zeros(16000, np.int16)])
+            m.reset()
+            sc = [float(max(m.predict(x[j:j + 1280]).values())) for j in range(0, len(x) - 1280, 1280)]
+            mx = max(sc) if sc else 0.0
+            ok = mx >= 0.1 if pos else mx < 0.1
+            rec(f"wake3 {'+' if pos else '-'} {phrase} [{voices[i % len(voices)]}]", ok,
+                f"max={mx:.3f}{' (мгновенно)' if mx >= 0.75 else ''}")
+        return
     if ONLY == "wake2" and (BASE / "data" / "test" / "names.json").exists():
         # подбор имени: как распознавание слышит кандидатов (TTS → STT на разных языках)
         t_models()
