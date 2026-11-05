@@ -53,8 +53,8 @@ Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm
 Source: "{#Src}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"
-Name: "{userdesktop}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; Tasks: desktopicon
+Name: "{userprograms}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"
+Name: "{userdesktop}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; Description: "{cm:StartAfter}"; Flags: nowait postinstall skipifsilent

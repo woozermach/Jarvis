@@ -92,6 +92,8 @@ jobs:
           for ($i = 0; $i -lt 40 -and -not $ok; $i++) { Start-Sleep 1; $ok = [bool](Get-Process -Id $w.Id -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like "Oswin*" }) }
           Get-Content "$d\data\window.log" -ErrorAction SilentlyContinue
           if (-not $ok) { Write-Error "WebView2 window did not appear"; exit 1 }
+          Start-Sleep 3
+          if (Select-String -Path "$d\data\window.log" -Pattern "WARNING" -Quiet) { Get-Content "$d\data\window.log"; Write-Error "window.py warnings"; exit 1 }
           Write-Host "webview window ok"
           Stop-Process -Id $w.Id -Force
           Start-Process "$d\unins000.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES" -Wait

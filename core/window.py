@@ -62,6 +62,55 @@ def _find_hwnd(title, pid):
     return found[0] if found else None
 
 
+def _set_taskbar_identity(h, app_id, title):
+    """Имя и значок в панели задач / меню правой кнопки: «Oswin» вместо «Python».
+    Свойства окна System.AppUserModel.* (ID, RelaunchCommand, RelaunchDisplayNameResource, RelaunchIconResource)."""
+    from ctypes import wintypes
+
+    class GUID(ctypes.Structure):
+        _fields_ = [("a", wintypes.DWORD), ("b", wintypes.WORD), ("c", wintypes.WORD), ("d", ctypes.c_ubyte * 8)]
+
+    class PROPERTYKEY(ctypes.Structure):
+        _fields_ = [("fmtid", GUID), ("pid", wintypes.DWORD)]
+
+    class PROPVARIANT(ctypes.Structure):
+        _fields_ = [("vt", wintypes.USHORT), ("r1", wintypes.USHORT), ("r2", wintypes.USHORT), ("r3", wintypes.USHORT),
+                    ("val", ctypes.c_void_p), ("pad", ctypes.c_void_p)]
+
+    def guid(sv):
+        g = GUID()
+        ctypes.windll.ole32.CLSIDFromString(ctypes.c_wchar_p(sv), ctypes.byref(g))
+        return g
+
+    ctypes.windll.ole32.CoInitialize(None)
+    store = ctypes.c_void_p()
+    iid = guid("{886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99}")  # IID_IPropertyStore
+    if ctypes.windll.shell32.SHGetPropertyStoreForWindow(wintypes.HWND(h), ctypes.byref(iid), ctypes.byref(store)) != 0:
+        return False
+    vtbl = ctypes.cast(ctypes.cast(store, ctypes.POINTER(ctypes.c_void_p))[0], ctypes.POINTER(ctypes.c_void_p))
+    SetValue = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p, ctypes.POINTER(PROPERTYKEY),
+                                  ctypes.POINTER(PROPVARIANT))(vtbl[6])
+    Commit = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(vtbl[7])
+    Release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(vtbl[2])
+    fmt = guid("{9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}")  # PKEY_AppUserModel_*
+    pyw = BASE / ".venv" / "Scripts" / "pythonw.exe"
+    if not pyw.exists():
+        pyw = Path(sys.executable).with_name("pythonw.exe")
+    values = {5: app_id,                                                   # ID
+              2: f'"{pyw}" "{BASE / "jarvis.py"}"',                       # RelaunchCommand
+              3: f'{BASE / "ui" / "jarvis.ico"},0',                        # RelaunchIconResource
+              4: title}                                                    # RelaunchDisplayNameResource
+    keep = []
+    for pid in (5, 2, 3, 4):  # ID — первым
+        buf = ctypes.create_unicode_buffer(values[pid])
+        keep.append(buf)
+        pv = PROPVARIANT(vt=31, val=ctypes.cast(buf, ctypes.c_void_p))  # VT_LPWSTR
+        SetValue(store, ctypes.byref(PROPERTYKEY(fmt, pid)), ctypes.byref(pv))
+    Commit(store)
+    Release(store)
+    return True
+
+
 def _style_native(title, dark):
     """Иконка Oswin вместо иконки Python, тёмный заголовок, размер под экран."""
     u = ctypes.windll.user32
@@ -74,6 +123,11 @@ def _style_native(title, dark):
     if not h:
         log.warning("окно не найдено для оформления")
         return
+    try:
+        from core.brand import APP_ID
+        _set_taskbar_identity(h, f"{APP_ID}.assistant", title)
+    except Exception as e:
+        log.warning("панель задач: %s", e)
     ico = str(BASE / "ui" / "jarvis.ico")
     try:
         for kind, size in ((0, 16), (1, 256)):  # ICON_SMALL, ICON_BIG
