@@ -1,0 +1,88 @@
+name: Wake word
+
+# Обучение модели слова активации «Hey Oswin» (openWakeWord) на синтетической речи (Piper, 900+ голосов).
+# Запуск вручную: Actions → Wake word → Run workflow. Результат — артефакт hey_oswin (onnx + отчёт).
+on:
+  workflow_dispatch:
+    inputs:
+      n_samples:
+        description: "Positive samples"
+        default: "15000"
+      steps:
+        description: "Training steps"
+        default: "30000"
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      W: /mnt/ww
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Workspace
+        run: |
+          sudo mkdir -p $W && sudo chown $USER $W
+          df -h / /mnt
+          sudo apt-get update -q && sudo apt-get install -y -q espeak-ng libsndfile1 > /dev/null
+
+      - name: Install
+        run: |
+          cd $W
+          # форк с generate_samples.py в корне — его ждёт openwakeword/train.py
+          git clone -q https://github.com/dscripka/piper-sample-generator
+          wget -q -O piper-sample-generator/models/en-us-libritts-high.pt https://github.com/rhasspy/piper-sample-generator/releases/download/v1.0.0/en-us-libritts-high.pt
+          git clone -q https://github.com/dscripka/openWakeWord oww
+          pip install -q --upgrade pip
+          pip install -q torch==2.1.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "numpy<2" piper-phonemize espeak-phonemizer webrtcvad mutagen==1.47.0 torchinfo==1.8.0 torchmetrics==1.2.0 \
+            speechbrain==0.5.14 audiomentations==0.33.0 torch-audiomentations==0.11.0 acoustics==0.2.6 \
+            pronouncing==0.2.0 deep-phonemizer==0.0.19 onnx onnxruntime soundfile pyarrow huggingface_hub pyyaml tqdm scipy
+          pip install -q -e ./oww
+          mkdir -p oww/openwakeword/resources/models
+          for f in embedding_model.onnx melspectrogram.onnx; do
+            wget -q -O oww/openwakeword/resources/models/$f https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/$f
+          done
+          python -c "import openwakeword, torch, speechbrain; print('ok', torch.__version__)"
+
+      - name: Background, RIR, features
+        run: |
+          cd $W
+          python $GITHUB_WORKSPACE/tools/wakeword/prepare_data.py $W/data
+          wget -q https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy
+          wget -q https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy
+          ls -la $W; df -h /mnt
+
+      - name: Config
+        run: python tools/wakeword/make_config.py $W/oww/examples/custom_model.yml $W/hey_oswin.yml $W ${{ inputs.n_samples }} ${{ inputs.steps }}
+
+      - name: Generate clips (Piper)
+        run: |
+          cd $W
+          python oww/openwakeword/train.py --training_config hey_oswin.yml --generate_clips 2>&1 | grep -v "it/s\]" | tail -40
+
+      - name: Augment
+        run: |
+          cd $W
+          python oww/openwakeword/train.py --training_config hey_oswin.yml --augment_clips 2>&1 | grep -v "it/s\]" | tail -40
+
+      - name: Train
+        run: |
+          cd $W
+          python oww/openwakeword/train.py --training_config hey_oswin.yml --train_model 2>&1 | tee train.log | grep -v "it/s\]" | tail -80
+          ls -la model
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hey_oswin
+          path: |
+            /mnt/ww/model/*.onnx
+            /mnt/ww/train.log
+            /mnt/ww/hey_oswin.yml
+          if-no-files-found: warn
