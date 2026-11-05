@@ -136,11 +136,13 @@ class Updater:
                 compile(py.read_text(encoding="utf-8"), str(py), "exec")
             helper = UPD / "helper.py"
             shutil.copy2(src / "core" / "update_helper.py", helper)
-            vpy = BASE / ".venv" / "Scripts" / "python.exe"
-            py = str(vpy if vpy.exists() else Path(sys.executable))
+            # pythonw, а не python.exe: консольный python (особенно лаунчер venv) показывал чёрное окно
+            vpy = next((p for p in (BASE / ".venv" / "Scripts" / "pythonw.exe", BASE / ".venv" / "Scripts" / "python.exe")
+                        if p.exists()), Path(sys.executable))
+            py = str(vpy)
             self._progress(f"Устанавливаю {ver} и перезапускаюсь…")
             subprocess.Popen([py, str(helper), str(BASE), str(src), str(self.ctx.port), info["current"], ver],
-                             cwd=str(UPD), creationflags=DETACHED | NO_WINDOW)
+                             cwd=str(UPD), creationflags=NO_WINDOW)
             self.ctx.later(1.5, lambda: __import__("os")._exit(0))
             return {"ok": True, "installing": ver}
         except Exception as e:

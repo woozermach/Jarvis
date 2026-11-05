@@ -93,9 +93,8 @@ def _set_taskbar_identity(h, app_id, title):
     Commit = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_void_p)(vtbl[7])
     Release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(vtbl[2])
     fmt = guid("{9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}")  # PKEY_AppUserModel_*
-    pyw = BASE / ".venv" / "Scripts" / "pythonw.exe"
-    if not pyw.exists():
-        pyw = Path(sys.executable).with_name("pythonw.exe")
+    pyw = next((p for p in (BASE / ".venv" / "Scripts" / "Oswin.exe", BASE / ".venv" / "Scripts" / "pythonw.exe")
+                if p.exists()), Path(sys.executable).with_name("pythonw.exe"))
     values = {5: app_id,                                                   # ID
               2: f'"{pyw}" "{BASE / "jarvis.py"}"',                       # RelaunchCommand
               3: f'{BASE / "ui" / "jarvis.ico"},0',                        # RelaunchIconResource

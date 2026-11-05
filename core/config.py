@@ -8,6 +8,16 @@ import threading
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
+
+
+def app_exe():
+    """Чем запускать Oswin без консоли: Oswin.exe (копия pythonw с нашим именем и значком — её кладёт установщик,
+    в «Диспетчере задач» видно «Oswin», а не «Python») или обычный pythonw."""
+    s = BASE / ".venv" / "Scripts"
+    for p in (s / "Oswin.exe", s / "pythonw.exe", Path(sys.executable).with_name("pythonw.exe")):
+        if p.exists():
+            return p
+    return Path(sys.executable)
 DATA_DIR = BASE / "data"
 DATA_DIR.mkdir(exist_ok=True)
 CONFIG_PATH = BASE / "config.json"

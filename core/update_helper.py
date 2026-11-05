@@ -77,10 +77,9 @@ def prune(target: Path, keep: set):
 
 
 def start():
-    pyw = BASE / ".venv" / "Scripts" / "pythonw.exe"
-    if not pyw.exists():
-        pyw = Path(sys.executable)
-    subprocess.Popen([str(pyw), str(BASE / "jarvis.py")], cwd=str(BASE), creationflags=DETACHED)
+    s = BASE / ".venv" / "Scripts"
+    pyw = next((p for p in (s / "Oswin.exe", s / "pythonw.exe") if p.exists()), Path(sys.executable))
+    subprocess.Popen([str(pyw), str(BASE / "jarvis.py")], cwd=str(BASE), creationflags=NO_WINDOW)
 
 
 def wait_up(sec):

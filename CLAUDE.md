@@ -56,6 +56,9 @@
 
 ## Важные грабли (уже проверено на этом ноутбуке)
 
+- **Никаких консольных окон.** Дочерние процессы — только `pythonw`/`Oswin.exe` или с `creationflags=NO_WINDOW` (0x08000000). Не `DETACHED_PROCESS` для консольных программ и не `cmd /c …`: консольный потомок процесса без консоли открывает чёрное окно (так было с python.exe-лаунчером venv при обновлении). Запускалка — `config.app_exe()` (Oswin.exe → pythonw).
+- Окно интерфейса ищется по ТОЧНОМУ заголовку (`brand.is_own_window`): вкладка сайта «Oswin — …» в браузере тоже начинается с «Oswin».
+
 - **Python в .venv — 3.13** (системный 3.15 — для onnxruntime/scipy колёс может не быть). Ставится `setup_jarvis.py` через `py install 3.13`.
 - **Не использовать SpeechRecognition / flac.exe** — неподписанный exe блокируется Windows и вешает процесс. STT — сырой PCM в `core/stt.py`.
 - **openWakeWord импортирует sklearn** — DLL может блокироваться; в `wake.py` стоит заглушка `openwakeword.custom_verifier_model`.

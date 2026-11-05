@@ -53,11 +53,11 @@ Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm
 Source: "{#Src}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"
-Name: "{userdesktop}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"; Tasks: desktopicon
+Name: "{userprograms}\Oswin"; Filename: "{app}\.venv\Scripts\Oswin.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"
+Name: "{userdesktop}\Oswin"; Filename: "{app}\.venv\Scripts\Oswin.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; Description: "{cm:StartAfter}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\.venv\Scripts\Oswin.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; Description: "{cm:StartAfter}"; Flags: nowait postinstall skipifsilent
 
 [InstallDelete]
 ; ярлыки прежнего имени (Sayro, до 3.1)
@@ -82,7 +82,7 @@ begin
   Script := AddBackslash(Script) + 'oswin_stop.ps1';
   SaveStringToFile(Script,
     '$p = ''' + P + '''' + #13#10 +
-    'Get-CimInstance Win32_Process -Filter "Name=''pythonw.exe'' OR Name=''python.exe''" | ' +
+    'Get-CimInstance Win32_Process -Filter "Name=''pythonw.exe'' OR Name=''python.exe'' OR Name=''Oswin.exe''" | ' +
     'Where-Object { ($_.ExecutablePath -and $_.ExecutablePath.ToLower().StartsWith($p.ToLower())) -or ' +
     '($_.CommandLine -and $_.CommandLine.ToLower().Contains($p.ToLower())) } | ' +
     'ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }' + #13#10, False);

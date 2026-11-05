@@ -51,6 +51,8 @@ jobs:
           & $py -m pip install --upgrade pip --no-warn-script-location --disable-pip-version-check
           & $py -m pip install -r requirements.txt --no-warn-script-location --disable-pip-version-check
           if ($LASTEXITCODE -ne 0) { exit 1 }
+          # Oswin.exe — та же подписанная pythonw.exe под нашим именем (ресурсы не трогаем, чтобы подпись осталась целой)
+          Copy-Item build\app\.venv\Scripts\pythonw.exe build\app\.venv\Scripts\Oswin.exe
 
       - name: Wake-word models
         shell: pwsh
@@ -83,13 +85,13 @@ jobs:
         run: |
           $d = "$env:RUNNER_TEMP\OswinTest"
           Start-Process build\out\OswinSetup.exe -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$d","/TASKS=" -Wait
-          if (-not (Test-Path "$d\.venv\Scripts\pythonw.exe")) { Write-Error "not installed"; exit 1 }
+          if (-not (Test-Path "$d\.venv\Scripts\Oswin.exe")) { Write-Error "not installed"; exit 1 }
           & "$d\.venv\Scripts\python.exe" -c "import sys;sys.path.insert(0,r'$d');import core.assistant;print('installed ok')"
           if ($LASTEXITCODE -ne 0) { exit 1 }
           # окно WebView2: должно появиться окно «Oswin» процесса pythonw
-          $w = Start-Process "$d\.venv\Scripts\pythonw.exe" -ArgumentList "`"$d\core\window.py`"","about:blank" -WorkingDirectory $d -PassThru
+          $w = Start-Process "$d\.venv\Scripts\Oswin.exe" -ArgumentList "`"$d\core\window.py`"","about:blank" -WorkingDirectory $d -PassThru
           $ok = $false
-          for ($i = 0; $i -lt 40 -and -not $ok; $i++) { Start-Sleep 1; $ok = [bool](Get-Process -Id $w.Id -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like "Oswin*" }) }
+          for ($i = 0; $i -lt 40 -and -not $ok; $i++) { Start-Sleep 1; $ok = [bool](Get-Process -Id $w.Id -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq "Oswin" }) }
           Get-Content "$d\data\window.log" -ErrorAction SilentlyContinue
           if (-not $ok) { Write-Error "WebView2 window did not appear"; exit 1 }
           Start-Sleep 3

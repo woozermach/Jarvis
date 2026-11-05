@@ -66,11 +66,8 @@ def open_edge(url):
 
 
 def _pythonw():
-    import sys
-    for p in (BASE / ".venv" / "Scripts" / "pythonw.exe", Path(sys.executable).with_name("pythonw.exe")):
-        if p.exists():
-            return p
-    return Path(sys.executable)
+    from .config import app_exe
+    return app_exe()
 
 
 def open_window(port):
@@ -155,6 +152,20 @@ def focus_window(port):
         open_window(port)
 
 
+def _toast_app_id():
+    """От чьего имени уведомление: «Oswin» (ярлык установщика в «Пуске» с AppUserModelID oswin.assistant),
+    иначе — как раньше, от Windows PowerShell (у ручной установки нет такого ярлыка, и Windows не покажет тост)."""
+    try:
+        from .winsys import known_folder
+        from .brand import NAME
+        lnk = known_folder("Programs") / f"{NAME}.lnk"
+        if lnk.exists() and "oswin.assistant".encode("utf-16-le") in lnk.read_bytes():
+            return "oswin.assistant"
+    except Exception:
+        pass
+    return "{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe"
+
+
 def notify(title, text):
     """Всплывающее уведомление Windows (через PowerShell, без зависимостей)."""
     if not IS_WIN:
@@ -166,7 +177,7 @@ def notify(title, text):
               f"$x.GetElementsByTagName('text')[0].AppendChild($x.CreateTextNode('{t}'))|Out-Null;"
               f"$x.GetElementsByTagName('text')[1].AppendChild($x.CreateTextNode('{m}'))|Out-Null;"
               "$n=[Windows.UI.Notifications.ToastNotification]::new($x);"
-              "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe').Show($n)")
+              f"[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{_toast_app_id()}').Show($n)")
     try:
         subprocess.Popen(["powershell", "-NoProfile", "-Command", script], creationflags=NO_WINDOW)
     except Exception:
@@ -249,7 +260,7 @@ def set_autostart(enabled: bool):
         except FileNotFoundError:
             pass
         return True
-    pyw = BASE / ".venv" / "Scripts" / "pythonw.exe"
+    pyw = _pythonw()
     ps = (f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}');"
           f"$s.TargetPath='{pyw}';$s.Arguments='\"{BASE / 'jarvis.py'}\" --autostart';"
           f"$s.WorkingDirectory='{BASE}';$s.IconLocation='{BASE / 'ui' / 'jarvis.ico'}';$s.Save()")
@@ -267,13 +278,11 @@ def autostart_enabled():
 
 
 def restart_jarvis():
-    """Перезапуск: новый процесс стартует через 2 с, текущий завершается."""
-    pyw = BASE / ".venv" / "Scripts" / "pythonw.exe"
-    if not pyw.exists():
-        import sys
-        pyw = Path(sys.executable)
-    subprocess.Popen(f'cmd /c timeout /t 2 /nobreak >nul & start "" "{pyw}" "{BASE / "jarvis.py"}"',
-                     shell=True, creationflags=NO_WINDOW | 0x00000008)
+    """Перезапуск: новый процесс стартует через 2 с (без cmd/timeout — никаких чёрных окон), текущий завершается."""
+    pyw = str(_pythonw())
+    code = ("import time,subprocess,sys;time.sleep(2);"
+            "subprocess.Popen([sys.argv[1],sys.argv[2]],cwd=sys.argv[3],creationflags=0x08000000)")
+    subprocess.Popen([pyw, "-c", code, pyw, str(BASE / "jarvis.py"), str(BASE)], cwd=str(BASE), creationflags=NO_WINDOW)
     os._exit(0)
 
 
