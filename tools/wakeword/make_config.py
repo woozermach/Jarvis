@@ -11,11 +11,13 @@ c = yaml.safe_load(open(src))
 c.update({
     "model_name": "hey_oswin",
     # «Hey Oswin» и просто «Oswin» (так зовут по-русски/по-польски: «Освин, …»)
-    "target_phrase": ["hey oswin", "oswin"],
+    # + произношение через «в», как говорят по-русски/по-немецки/по-словацки («Освин», «Асвин» с аканьем)
+    "target_phrase": ["hey oswin", "oswin", "hey osvin", "osvin", "hey asvin", "asvin"],
     # похожие слова, на которые модель НЕ должна срабатывать (кроме автоматически подобранных по фонемам)
     "custom_negative_phrases": ["austin", "hey austin", "boston", "houston", "osborne", "oswald", "awesome",
                                 "own win", "so win", "always win", "hey siri", "hey google", "hey jarvis",
-                                "hey alexa", "o's win", "hey jasmine", "us win", "oz", "wins"],
+                                "hey alexa", "o's win", "hey jasmine", "us win", "oz", "wins",
+                                "as when", "oz when", "is when", "assign", "asking", "boss win", "gas vent", "hey alvin", "kevin", "melvin"],
     "n_samples": n,
     "n_samples_val": max(20, max(min(1000, n * shards), n * shards // 8) // shards),
     "tts_batch_size": 50,

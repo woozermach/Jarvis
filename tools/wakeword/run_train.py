@@ -19,7 +19,8 @@ torch.manual_seed(1000 + shard)
 import pronouncing  # noqa: E402
 
 pronouncing.init_cmu()
-for word, phones in {"oswin": ["AA1 Z W IH0 N", "AA1 S W IH0 N"]}.items():
+for word, phones in {"oswin": ["AA1 Z W IH0 N", "AA1 S W IH0 N"], "osvin": ["AA1 S V IH0 N", "OW1 S V IH0 N"],
+                     "asvin": ["AA0 S V IY1 N", "AE1 S V IH0 N"]}.items():
     for ph in phones:
         if ph not in pronouncing.lookup[word]:
             pronouncing.lookup[word].append(ph)
