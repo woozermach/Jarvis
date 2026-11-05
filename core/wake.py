@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Слово активации «(Эй,) Джарвис».
+"""Слово активации («Эй, Освин» / «Hey Jarvis»).
 
 Гибрид из двух ступеней:
  1) openWakeWord (модель hey_jarvis) крутится локально на каждом кадре 80 мс.
@@ -41,6 +41,13 @@ def _stub_sklearn_dependency():
         sys.modules["openwakeword.custom_verifier_model"] = stub
 
 
+def _custom_model(word):
+    """models/hey_<word>.onnx рядом с программой — локальная модель слова активации."""
+    from pathlib import Path
+    p = Path(__file__).resolve().parent.parent / "models" / f"hey_{word}.onnx"
+    return p if p.exists() else None
+
+
 class Wake:
     def __init__(self, cfg, on_wake):
         self.cfg = cfg
@@ -64,8 +71,9 @@ class Wake:
         self.rx = wake_re(self.word)
         self.strip = strip_re(self.rx)
         eng = cfg.get("wake_engine", "auto")
-        if self.word != "jarvis" and eng in ("auto", "openwakeword"):
-            eng = "google"  # локальной модели для этого имени пока нет — только распознавание речи
+        self.model_file = _custom_model(self.word)
+        if self.word != "jarvis" and not self.model_file and eng in ("auto", "openwakeword"):
+            eng = "google"  # локальной модели для этого имени нет — только распознавание речи
         if eng == "off":
             self.status = "off"
             return
@@ -78,19 +86,23 @@ class Wake:
             self.status = (f"speech recognition · “{self.word}”" if eng == "google"
                            else "speech recognition (on-device model unavailable)")
         elif self.engine == "openwakeword":
-            self.status = "on-device (openWakeWord)" + (" + speech check" if self.verify_ok else "")
+            self.status = ("on-device model “hey " + self.word + "”" if self.model_file else "on-device (openWakeWord)") \
+                + (" + speech check" if self.verify_ok else "")
         log.info("Wake: %s — %s", self.engine, self.status)
 
     def _init_oww(self):
         try:
             _stub_sklearn_dependency()
             from openwakeword.model import Model
-            try:
-                self.model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
-            except Exception:
-                from openwakeword.utils import download_models
-                download_models(model_names=["hey_jarvis"])
-                self.model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
+            if self.model_file:  # своя модель (models/hey_<имя>.onnx), обученная tools/wakeword
+                self.model = Model(wakeword_models=[str(self.model_file)], inference_framework="onnx")
+            else:
+                try:
+                    self.model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
+                except Exception:
+                    from openwakeword.utils import download_models
+                    download_models(model_names=["hey_jarvis"])
+                    self.model = Model(wakeword_models=["hey_jarvis"], inference_framework="onnx")
             self.engine = "openwakeword"
         except Exception as e:
             self.status = f"openWakeWord недоступен: {e}"

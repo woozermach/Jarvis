@@ -1,82 +1,114 @@
 name: Wake word
 
-# Обучение модели слова активации «Hey Oswin» (openWakeWord) на синтетической речи (Piper, 900+ голосов).
-# Запуск вручную: Actions → Wake word → Run workflow. Результат — артефакт hey_oswin (onnx + отчёт).
+# Обучение модели слова активации «Hey Oswin» (openWakeWord) на синтетической речи Piper (900+ голосов).
+# 1) gen: до 20 машин параллельно генерируют фразы (на процессоре ~1 фраза/с); 2) train: шумы, эхо, признаки, обучение.
+# Запуск вручную: Actions → Wake word → Run workflow. Результат — артефакт hey_oswin (onnx + журнал обучения).
 on:
   workflow_dispatch:
     inputs:
       n_samples:
-        description: "Positive samples"
-        default: "15000"
+        description: "Positive samples (total)"
+        default: "20000"
       steps:
         description: "Training steps"
         default: "30000"
+      shards:
+        description: "Parallel generators (max 20)"
+        default: "20"
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  W: /mnt/ww
 
 jobs:
-  train:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
-    env:
-      W: /mnt/ww
+    outputs:
+      shards: ${{ steps.m.outputs.shards }}
+    steps:
+      - id: m
+        run: echo "shards=$(python3 -c "import json;print(json.dumps(list(range(${{ inputs.shards }}))))")" >> $GITHUB_OUTPUT
+
+  gen:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-
-      - name: Workspace
-        run: |
-          sudo mkdir -p $W && sudo chown $USER $W
-          df -h / /mnt
-          sudo apt-get update -q && sudo apt-get install -y -q espeak-ng libsndfile1 > /dev/null
-
       - name: Install
         run: |
+          sudo mkdir -p $W && sudo chown $USER $W
+          bash tools/wakeword/install.sh
+      - name: Generate
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          N=$(( ${{ inputs.n_samples }} / ${{ inputs.shards }} ))
+          mkdir -p $W/data/mit_rirs $W/data/background
+          python tools/wakeword/make_config.py $W/oww/examples/custom_model.yml $W/cfg.yml $W $N ${{ inputs.steps }} > /dev/null
           cd $W
-          # форк с generate_samples.py в корне — его ждёт openwakeword/train.py
-          git clone -q https://github.com/dscripka/piper-sample-generator
-          wget -q -O piper-sample-generator/models/en-us-libritts-high.pt https://github.com/rhasspy/piper-sample-generator/releases/download/v1.0.0/en-us-libritts-high.pt
-          git clone -q https://github.com/dscripka/openWakeWord oww
-          pip install -q --upgrade pip
-          pip install -q torch==2.1.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cpu
-          pip install -q "numpy<2" piper-phonemize espeak-phonemizer webrtcvad mutagen==1.47.0 torchinfo==1.8.0 torchmetrics==1.2.0 \
-            speechbrain==0.5.14 audiomentations==0.33.0 torch-audiomentations==0.11.0 acoustics==0.2.6 \
-            pronouncing==0.2.0 deep-phonemizer==0.0.19 onnx onnxruntime soundfile pyarrow huggingface_hub pyyaml tqdm scipy
-          pip install -q -e ./oww
-          mkdir -p oww/openwakeword/resources/models
-          for f in embedding_model.onnx melspectrogram.onnx; do
-            wget -q -O oww/openwakeword/resources/models/$f https://github.com/dscripka/openWakeWord/releases/download/v0.5.1/$f
-          done
-          python -c "import openwakeword, torch, speechbrain; print('ok', torch.__version__)"
+          python $GITHUB_WORKSPACE/tools/wakeword/run_train.py oww/openwakeword/train.py --training_config cfg.yml --generate_clips 2>&1 \
+            | (grep -vE "it/s\]|Batch [0-9]+/[0-9]+ complete|connectionpool" || true)
+          for d in positive_train positive_test negative_train negative_test; do echo "$d: $(ls model/hey_oswin/$d | wc -l)"; done
+          tar -C model/hey_oswin -cf $W/clips.tar positive_train positive_test negative_train negative_test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clips-${{ matrix.shard }}
+          path: /mnt/ww/clips.tar
+          retention-days: 3
 
+  train:
+    needs: gen
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install
+        run: |
+          sudo mkdir -p $W && sudo chown $USER $W
+          bash tools/wakeword/install.sh
       - name: Background, RIR, features
         run: |
           cd $W
           python $GITHUB_WORKSPACE/tools/wakeword/prepare_data.py $W/data
           wget -q https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy
           wget -q https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy
-          ls -la $W; df -h /mnt
-
-      - name: Config
-        run: python tools/wakeword/make_config.py $W/oww/examples/custom_model.yml $W/hey_oswin.yml $W ${{ inputs.n_samples }} ${{ inputs.steps }}
-
-      - name: Generate clips (Piper)
+          df -h /mnt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: clips-*
+          path: /mnt/ww/clips
+      - name: Merge clips
         run: |
-          cd $W
-          python oww/openwakeword/train.py --training_config hey_oswin.yml --generate_clips 2>&1 | grep -v "it/s\]" | tail -40
-
+          mkdir -p $W/model/hey_oswin
+          for t in $W/clips/*/clips.tar; do tar -C $W/model/hey_oswin -xf "$t"; done
+          rm -rf $W/clips
+          for d in positive_train positive_test negative_train negative_test; do echo "$d: $(ls $W/model/hey_oswin/$d | wc -l)"; done
+          python tools/wakeword/make_config.py $W/oww/examples/custom_model.yml $W/cfg.yml $W ${{ inputs.n_samples }} ${{ inputs.steps }}
       - name: Augment
         run: |
           cd $W
-          python oww/openwakeword/train.py --training_config hey_oswin.yml --augment_clips 2>&1 | grep -v "it/s\]" | tail -40
-
+          python $GITHUB_WORKSPACE/tools/wakeword/run_train.py oww/openwakeword/train.py --training_config cfg.yml --augment_clips 2>&1 \
+            | (grep -vE "it/s\]|connectionpool" || true)
       - name: Train
         run: |
           cd $W
-          python oww/openwakeword/train.py --training_config hey_oswin.yml --train_model 2>&1 | tee train.log | grep -v "it/s\]" | tail -80
+          python $GITHUB_WORKSPACE/tools/wakeword/run_train.py oww/openwakeword/train.py --training_config cfg.yml --train_model 2>&1 \
+            | (grep -vE "it/s\]|connectionpool" || true) | tee train.log
           ls -la model
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -84,5 +116,5 @@ jobs:
           path: |
             /mnt/ww/model/*.onnx
             /mnt/ww/train.log
-            /mnt/ww/hey_oswin.yml
+            /mnt/ww/cfg.yml
           if-no-files-found: warn
