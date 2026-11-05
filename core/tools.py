@@ -680,9 +680,13 @@ class Toolbox:
         return data
 
     def t_get_weather(self, city="", days=1):
-        d = self.weather_data(city or None, max(1, min(7, int(days or 1))))
-        if not city or norm(city) == norm(self.cfg.get("city", "")):
+        n = max(1, min(7, int(days or 1)))
+        home = not city or norm(city) == norm(self.cfg.get("city", ""))
+        # карточка «Сегодня» всегда показывает 4 дня — даже если модель спросила только про сегодня
+        d = self.weather_data(city or None, max(n, 4) if home else n)
+        if home:
             self.ctx.push_weather(d)
+            d = dict(d, days=(d.get("days") or [])[:n])
         return d
 
     def t_exchange_rate(self, base, target, amount=1):
