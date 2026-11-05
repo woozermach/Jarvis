@@ -1,0 +1,25 @@
+/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/site-packages/torch_audiomentations/utils/io.py:27: UserWarning: torchaudio._backend.set_audio_backend has been deprecated. With dispatcher enabled, this function is no-op. You can remove the function call.
+  torchaudio.set_audio_backend("soundfile")
+torchvision is not available - cannot save figures
+INFO:root:##################################################
+Starting training sequence 1...
+##################################################
+INFO:root:##################################################
+Starting training sequence 2...
+##################################################
+INFO:root:Increasing weight on negative examples to reduce false positives...
+INFO:root:##################################################
+Starting training sequence 3...
+##################################################
+INFO:root:Increasing weight on negative examples to reduce false positives...
+INFO:root:Merging checkpoints above the 90th percentile into single model...
+INFO:root:
+################
+Final Model Accuracy: 0.7032085657119751
+Final Model Recall: 0.4171122908592224
+Final Model False Positives per Hour: 23.9822998046875
+################
+
+INFO:root:####
+Saving ONNX mode as '/mnt/ww/model/hey_oswin.onnx'
+tflite skipped: No module named 'onnx_tf'

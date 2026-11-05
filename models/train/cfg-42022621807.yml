@@ -1,0 +1,63 @@
+augmentation_batch_size: 16
+augmentation_rounds: 2
+background_paths:
+- /mnt/ww/data/background
+background_paths_duplication_rate:
+- 1
+batch_n_per_class:
+  ACAV100M_sample: 1024
+  adversarial_negative: 70
+  positive: 70
+custom_negative_phrases:
+- austin
+- hey austin
+- boston
+- houston
+- osborne
+- oswald
+- awesome
+- own win
+- so win
+- always win
+- hey siri
+- hey google
+- hey jarvis
+- hey alexa
+- o's win
+- hey jasmine
+- us win
+- oz
+- wins
+- as when
+- oz when
+- is when
+- assign
+- asking
+- boss win
+- gas vent
+- hey alvin
+- kevin
+- melvin
+false_positive_validation_data_path: /mnt/ww/validation_set_features.npy
+feature_data_files:
+  ACAV100M_sample: /mnt/ww/acav_subset.npy
+layer_size: 32
+max_negative_weight: 1500
+model_name: hey_oswin
+model_type: dnn
+n_samples: 30000
+n_samples_val: 3750
+output_dir: /mnt/ww/model
+piper_sample_generator_path: /mnt/ww/piper-sample-generator
+rir_paths:
+- /mnt/ww/data/mit_rirs
+steps: 60000
+target_false_positives_per_hour: 0.2
+target_phrase:
+- hey oswin
+- oswin
+- hey osvin
+- osvin
+- hey asvin
+- asvin
+tts_batch_size: 50
