@@ -172,6 +172,8 @@ def coerce(key, value):
         raise ValueError(f"неизвестная настройка {key}")
     kind = sch[0]
     if kind == "choice":
+        if key == "wake_word" and value == "sayro":  # старое значение в списке выбора интерфейса (до 3.2.5)
+            value = "oswin"
         if value not in sch[1]:
             raise ValueError(f"{key}: недопустимое значение")
         return value
