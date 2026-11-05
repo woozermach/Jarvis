@@ -27,4 +27,11 @@ for word, phones in {"oswin": ["AA1 Z W IH0 N", "AA1 S W IH0 N"]}.items():
 
 train_py = sys.argv[1]
 sys.argv = [train_py] + sys.argv[2:]
-runpy.run_path(train_py, run_name="__main__")
+try:
+    runpy.run_path(train_py, run_name="__main__")
+except ModuleNotFoundError as e:
+    # train.py всегда пытается сделать .tflite (ошибка в argparse: default="False" — это истина); нам нужен только .onnx
+    if e.name in ("onnx_tf", "tensorflow") and any(a == "--train_model" for a in sys.argv):
+        print("tflite skipped:", e)
+    else:
+        raise

@@ -27,7 +27,7 @@ c.update({
     "background_paths": [f"{work}/data/background"],
     "background_paths_duplication_rate": [1],
     "false_positive_validation_data_path": f"{work}/validation_set_features.npy",
-    "feature_data_files": {"ACAV100M_sample": f"{work}/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"},
+    "feature_data_files": {"ACAV100M_sample": f"{work}/acav_subset.npy"},
     "batch_n_per_class": {"ACAV100M_sample": 1024, "adversarial_negative": 70, "positive": 70},
     "steps": steps,
     "target_false_positives_per_hour": 0.2,

@@ -86,7 +86,10 @@ jobs:
           python $GITHUB_WORKSPACE/tools/wakeword/prepare_data.py $W/data
           wget -q https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy
           wget -q https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy
-          df -h /mnt
+          # четверть признаков (~500 ч речи), чтобы файл помещался в память и обучение не упиралось в диск
+          python $GITHUB_WORKSPACE/tools/wakeword/subset_features.py openwakeword_features_ACAV100M_2000_hrs_16bit.npy acav_subset.npy 0.25
+          rm openwakeword_features_ACAV100M_2000_hrs_16bit.npy
+          df -h /mnt; free -g
       - uses: actions/download-artifact@v4
         with:
           pattern: clips-*
