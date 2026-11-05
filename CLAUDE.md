@@ -25,7 +25,7 @@
 - `core/audio.py` — микрофон 16 кГц / динамик 24 кГц (sounddevice, MME), чимы, автоопределение гарнитуры.
 - `core/wake.py` — активация. «Hey Oswin»: распознавание коротких фраз Google STT на языке интерфейса (+ второй шанс на en-US), т.к. локальной модели пока нет. «Hey Jarvis» (`wake_word=jarvis`): openWakeWord + проверка речью. TODO: обучить openWakeWord `hey_oswin` (приватность для ЕС, точность).
 - `core/websearch.py` — Google через `msedge --headless --dump-dom`, Google News RSS, Википедия, первое видео YouTube.
-- `core/server.py` — aiohttp на 127.0.0.1:8765 (UI + `/ws`), `core/desktop.py` — окно Edge `--app`, трей, хоткей, автозапуск, рестарт.
+- `core/server.py` — aiohttp на 127.0.0.1:8765 (UI + `/ws`), `core/desktop.py` — окно (WebView2 через `core/window.py` — отдельный процесс pywebview; запасной вариант Edge `--app`, `window_engine` в config), трей, хоткей, автозапуск, рестарт.
 - `core/telegram.py` — Telegram-бот (long polling, без сервера): привязка по 6-значному коду, текстовый агент Gemini REST +
   те же инструменты (цикл functionCall → functionResponse, части модели возвращаются как есть ради thoughtSignature), голосовые/фото, `/screen`, `/status`.
 - Проактивность — `Assistant._proactive_loop` (раз в 20 с по `last_stats`): перегрев ГП, батарея, диск, долгая игра (игра = средняя загрузка ГП ≥45% за 3 мин),
