@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""J.A.R.V.I.S. v2 — голосовой ИИ-ассистент для Windows.
+"""Oswin (бывший J.A.R.V.I.S. / Sayro) — голосовой ИИ-ассистент для Windows.
 Запуск: start.bat (или .venv\\Scripts\\pythonw.exe jarvis.py). Отладка: start_debug.bat"""
 import asyncio
 import json
@@ -45,6 +45,23 @@ def main():
             pass
     if already_running(int(cfg.get("port", 8765))):
         return
+    try:  # автозапуск под прежним именем (Sayro / J.A.R.V.I.S.) → ярлык с новым именем
+        from core.desktop import _startup_dir, set_autostart
+        from core.brand import NAME, LEGACY_NAMES
+        if sys.platform.startswith("win") and not (_startup_dir() / f"{NAME}.lnk").exists() \
+                and any((_startup_dir() / f"{n}.lnk").exists() for n in LEGACY_NAMES):
+            set_autostart(True)
+        if sys.platform.startswith("win"):  # ярлыки «Sayro» в «Пуске» и на рабочем столе → новое имя
+            from core.winsys import known_folder
+            for folder in ("Programs", "Desktop"):
+                d = known_folder(folder)
+                old = d / "Sayro.lnk"
+                if old.exists() and not (d / f"{NAME}.lnk").exists():
+                    raw = old.read_bytes()
+                    if b"jarvis.py" in raw or "jarvis.py".encode("utf-16-le") in raw:  # только наш ярлык
+                        old.rename(d / f"{NAME}.lnk")
+    except Exception as e:
+        log.warning("ярлыки: %s", e)
     from core.assistant import Assistant
     a = Assistant()
     try:

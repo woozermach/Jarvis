@@ -262,7 +262,8 @@ class Toolbox:
             return {"error": "неизвестное действие"}
         if action == "close_active":
             title = winsys.foreground_title()
-            if "J.A.R.V.I.S" in title:
+            from .brand import WINDOW_TITLE, LEGACY_TITLES
+            if title.startswith((WINDOW_TITLE,) + LEGACY_TITLES):
                 return {"error": "активно окно самого Джарвиса — не закрываю"}
         winsys.hotkey(combos[action])
         return "готово"

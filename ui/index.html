@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="google" content="notranslate">
-<title>Sayro</title>
+<title>Oswin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.36' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23E4F4FF'/%3E%3Cstop offset='.3' stop-color='%237CC4FF'/%3E%3Cstop offset='.65' stop-color='%233D7BFF'/%3E%3Cstop offset='1' stop-color='%236B45FF'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/ui/style.css">
@@ -13,7 +13,7 @@
   <header class="top">
     <div class="brand">
       <span class="mark" aria-hidden="true"></span>
-      <b id="brandName">Sayro</b>
+      <b id="brandName">Oswin</b>
       <em class="pro-badge hidden" id="proBadge">PRO</em>
     </div>
     <div class="flags">
@@ -100,23 +100,23 @@
     <div class="steps-bar" id="onbBar"><i></i><i></i><i></i><i></i></div>
     <section class="onb-step" data-step="0">
       <div class="onb-orb"></div>
-      <h1 data-i18n="onb.welcome">Meet Sayro</h1>
+      <h1 data-i18n="onb.welcome">Meet Oswin</h1>
       <p class="lead" data-i18n="onb.welcome_sub">Your voice for your PC. Open apps, see your screen, help in games and homework — just by talking.</p>
       <label class="fld"><span data-i18n="onb.language">Language</span><select id="onbLang"></select></label>
       <div class="grid2">
-        <label class="fld"><span data-i18n="set.user_name">What should Sayro call you</span><input id="onbName" data-i18n-ph="set.user_name_ph" placeholder="e.g. Alex"></label>
+        <label class="fld"><span data-i18n="set.user_name">What should Oswin call you</span><input id="onbName" data-i18n-ph="set.user_name_ph" placeholder="e.g. Alex"></label>
         <label class="fld"><span data-i18n="set.city">Your city (for weather)</span><input id="onbCity" placeholder="London"></label>
       </div>
-      <p class="legal mut"><span data-i18n="legal.note">Sayro sends your voice and, only when you ask, your screen to Google Gemini using your own key. Nothing is sent to the developer.</span>
+      <p class="legal mut"><span data-i18n="legal.note">Oswin sends your voice and, only when you ask, your screen to Google Gemini using your own key. Nothing is sent to the developer.</span>
         <a href="https://woozermach.github.io/Jarvis/privacy.html" target="_blank" data-i18n="legal.privacy">Privacy Policy</a> · <a href="https://woozermach.github.io/Jarvis/terms.html" target="_blank" data-i18n="legal.terms">Terms of Use</a></p>
     </section>
     <section class="onb-step" data-step="1">
       <h1 data-i18n="onb.ai_title">Connect your AI</h1>
-      <p class="lead" data-i18n="onb.ai_sub">Sayro talks to Google Gemini. Pick how you want to pay for it — you can change this any time.</p>
+      <p class="lead" data-i18n="onb.ai_sub">Oswin talks to Google Gemini. Pick how you want to pay for it — you can change this any time.</p>
       <div class="choices" id="onbChoices">
         <button class="choice on" data-v="pro"><i></i><span><b data-i18n="onb.c_pro">I have Google AI Pro</b><small data-i18n="onb.c_pro_d">Use the monthly Google Cloud credits that come with your subscription. Nothing extra to pay for AI.</small></span><em data-i18n="onb.recommended">Recommended</em></button>
         <button class="choice" data-v="key"><i></i><span><b data-i18n="onb.c_key">Use my own Gemini key</b><small data-i18n="onb.c_key_d">Pay Google directly for what you use — roughly $1 per hour of talking. A free tier exists outside the EU.</small></span><em data-i18n="onb.payg">Pay as you go</em></button>
-        <button class="choice" data-v="cloud" disabled><i></i><span><b data-i18n="onb.c_cloud">Sayro Cloud</b><small data-i18n="onb.c_cloud_d">Everything included in one subscription, no Google account needed.</small></span><em data-i18n="onb.soon">Coming soon</em></button>
+        <button class="choice" data-v="cloud" disabled><i></i><span><b data-i18n="onb.c_cloud">Oswin Cloud</b><small data-i18n="onb.c_cloud_d">Everything included in one subscription, no Google account needed.</small></span><em data-i18n="onb.soon">Coming soon</em></button>
       </div>
     </section>
     <section class="onb-step" data-step="2">
@@ -129,10 +129,10 @@
     </section>
     <section class="onb-step" data-step="3">
       <h1 data-i18n="onb.mic_title">Say hello</h1>
-      <p class="lead" data-i18n="onb.mic_sub">Check that Sayro hears you. Speak and watch the bar move.</p>
+      <p class="lead" data-i18n="onb.mic_sub">Check that Oswin hears you. Speak and watch the bar move.</p>
       <div class="meter big"><div class="mbar"><i id="onbMic"></i></div></div>
       <label class="fld"><span data-i18n="set.mic">Microphone</span><select id="onbMicDev"></select></label>
-      <div class="tip"><b data-i18n="onb.wake_tip_t">How to call Sayro</b><span data-i18n="onb.wake_tip">Say “Hey Sayro”, press Ctrl+Alt+J, or click the orb.</span></div>
+      <div class="tip"><b data-i18n="onb.wake_tip_t">How to call Oswin</b><span data-i18n="onb.wake_tip">Say “Hey Oswin”, press Ctrl+Alt+J, or click the orb.</span></div>
     </section>
     <div class="onb-foot">
       <button class="btn ghost" id="onbBack" data-i18n="btn.back">Back</button>
@@ -147,7 +147,7 @@
   <div class="sheet set-box">
     <nav class="set-nav" aria-label="Settings sections">
       <b data-i18n="set.title">Settings</b>
-      <button data-tab="pro" class="nav-pro"><i style="--c:#FFD60A"></i><span data-i18n="tab.pro">Sayro Pro</span></button>
+      <button data-tab="pro" class="nav-pro"><i style="--c:#FFD60A"></i><span data-i18n="tab.pro">Oswin Pro</span></button>
       <button data-tab="main" class="on"><i style="--c:#8E8E93"></i><span data-i18n="tab.main">General</span></button>
       <button data-tab="voice"><i style="--c:#0A84FF"></i><span data-i18n="tab.voice">Voice &amp; personality</span></button>
       <button data-tab="wake"><i style="--c:#FF9F0A"></i><span data-i18n="tab.wake">Wake word &amp; hotkey</span></button>
@@ -183,12 +183,12 @@
             <div class="hrow"><input id="licKey" data-i18n-ph="pro.key_ph" placeholder="Paste the key from your purchase e-mail"><button class="btn" id="licAct" data-i18n="pro.activate">Activate</button>
               <button class="btn danger hidden" id="licDel" data-i18n="pro.remove">Remove key</button></div>
             <small id="licInfo" class="mut"></small></label>
-          <p class="legal mut"><a href="https://woozermach.github.io/Jarvis/" target="_blank" data-i18n="legal.site">Sayro website</a> · <a href="https://woozermach.github.io/Jarvis/privacy.html" target="_blank" data-i18n="legal.privacy">Privacy Policy</a> · <a href="https://woozermach.github.io/Jarvis/terms.html" target="_blank" data-i18n="legal.terms">Terms of Use</a></p>
+          <p class="legal mut"><a href="https://woozermach.github.io/Jarvis/" target="_blank" data-i18n="legal.site">Oswin website</a> · <a href="https://woozermach.github.io/Jarvis/privacy.html" target="_blank" data-i18n="legal.privacy">Privacy Policy</a> · <a href="https://woozermach.github.io/Jarvis/terms.html" target="_blank" data-i18n="legal.terms">Terms of Use</a></p>
         </section>
 
         <section class="tab on" data-tab="main">
           <div class="grid2">
-            <label class="fld"><span data-i18n="set.user_name">What should Sayro call you</span><input id="s_user_name" data-i18n-ph="set.user_name_ph" placeholder="e.g. Alex"></label>
+            <label class="fld"><span data-i18n="set.user_name">What should Oswin call you</span><input id="s_user_name" data-i18n-ph="set.user_name_ph" placeholder="e.g. Alex"></label>
             <label class="fld"><span data-i18n="set.city">Your city (for weather)</span><input id="s_city" placeholder="London"></label>
           </div>
           <div class="grid2">
@@ -218,20 +218,20 @@
           <label class="fld"><span data-i18n="set.reply_language">Reply language</span><select id="s_reply_language"></select></label>
           <label class="fld"><span data-i18n="set.custom">Your own instructions</span>
             <textarea id="s_custom_instructions" rows="5" data-i18n-ph="set.custom_ph" placeholder="e.g. “Call me Alex. When I ask about maths, explain step by step.”"></textarea>
-            <small data-i18n="set.custom_h">Sayro follows this in every conversation.</small></label>
+            <small data-i18n="set.custom_h">Oswin follows this in every conversation.</small></label>
         </section>
 
         <section class="tab" data-tab="wake">
           <div class="grid2">
             <label class="fld"><span data-i18n="set.wake_word">Wake word</span><select id="s_wake_word">
-              <option value="sayro">“Hey Sayro”</option><option value="jarvis">“Hey Jarvis”</option></select></label>
+              <option value="sayro">“Hey Oswin”</option><option value="jarvis">“Hey Jarvis”</option></select></label>
             <label class="fld"><span data-i18n="set.wake_engine">How to listen</span><select id="s_wake_engine">
               <option value="auto" data-i18n="set.we_auto">Automatic (recommended)</option>
               <option value="openwakeword" data-i18n="set.we_local">On-device model only</option>
               <option value="google" data-i18n="set.we_speech">Speech recognition</option>
               <option value="off" data-i18n="set.we_off">Off — hotkey and click only</option></select></label>
           </div>
-          <small class="mut" data-i18n="set.wake_h">“Hey Sayro” is recognised from short phrases by Google speech recognition. An on-device model is coming.</small>
+          <small class="mut" data-i18n="set.wake_h">“Hey Oswin” is recognised from short phrases by Google speech recognition. An on-device model is coming.</small>
           <div class="meter big"><label data-i18n="set.wake_meter">Wake word confidence</label><div class="mbar wake"><i id="setWakeBar"></i><s id="setWakeThr"></s></div></div>
           <label class="fld"><span><span data-i18n="set.wake_threshold">Strictness</span> <em id="v_wake_threshold"></em></span>
             <input type="range" id="s_wake_threshold" min="0.2" max="0.9" step="0.05"><small data-i18n="set.wake_threshold_h">Higher — fewer false wakes; lower — reacts more easily.</small></label>
@@ -241,7 +241,7 @@
             <button class="btn" id="hkReset" data-i18n="btn.reset">Reset</button></div><small id="hkInfo"></small></label>
           <label class="fld"><span><span data-i18n="set.idle">Keep listening after a reply, s</span> <em id="v_idle_timeout"></em></span><input type="range" id="s_idle_timeout" min="5" max="60" step="1"></label>
           <label class="fld"><span><span data-i18n="set.vad">Pause before replying, ms</span> <em id="v_vad_silence_ms"></em></span><input type="range" id="s_vad_silence_ms" min="300" max="2000" step="50">
-            <small data-i18n="set.vad_h">If Sayro cuts you off mid-sentence — increase it.</small></label>
+            <small data-i18n="set.vad_h">If Oswin cuts you off mid-sentence — increase it.</small></label>
           <div class="group">
             <label class="tgl"><span><span data-i18n="set.headphones_auto">Detect a headset automatically</span> <em id="hsInfo" class="mut"></em></span><input type="checkbox" id="s_headphones_auto"><i></i></label>
             <label class="tgl"><span data-i18n="set.headphones">I always use headphones — interrupt by just talking</span><input type="checkbox" id="s_headphones"><i></i></label>
@@ -256,13 +256,13 @@
         </section>
 
         <section class="tab" data-tab="tools">
-          <p class="hint" data-i18n="set.tools_h">What Sayro may do on your computer. Switched-off abilities cannot be used.</p>
+          <p class="hint" data-i18n="set.tools_h">What Oswin may do on your computer. Switched-off abilities cannot be used.</p>
           <div id="toolToggles" class="group"></div>
           <div class="group"><label class="tgl"><span data-i18n="set.confirm">Ask before shutdown, emptying the bin and “buy/delete” buttons</span><input type="checkbox" id="s_confirm_dangerous"><i></i></label></div>
         </section>
 
         <section class="tab" data-tab="routines">
-          <p class="hint" data-i18n="rt.h">A routine is a set of actions you start with one phrase. The easiest way is to say: “Hey Sayro, create a gaming routine: open Steam and Discord, volume 40, quiet mode.” Then: “start the gaming routine”.</p>
+          <p class="hint" data-i18n="rt.h">A routine is a set of actions you start with one phrase. The easiest way is to say: “Hey Oswin, create a gaming routine: open Steam and Discord, volume 40, quiet mode.” Then: “start the gaming routine”.</p>
           <div id="routineList" class="routines"></div>
           <details class="rt-new"><summary data-i18n="rt.manual">Create a routine manually</summary>
             <div class="grid2"><label class="fld"><span data-i18n="rt.name">Name</span><input id="rtName" placeholder="Study"></label>
@@ -272,7 +272,7 @@
           </details>
           <div class="fld"><span data-i18n="rt.quiet">Quiet mode</span><div class="hrow"><span id="quietInfo" class="mut"></span>
             <button class="btn" data-quiet="60" data-i18n="rt.q1">1 hour</button><button class="btn" data-quiet="180" data-i18n="rt.q3">3 hours</button><button class="btn" data-quiet="0" data-i18n="rt.qoff">Turn off</button></div>
-            <small data-i18n="rt.quiet_h">In quiet mode Sayro does not start talking on its own — alerts arrive as notifications. Alarms and timers still ring.</small></div>
+            <small data-i18n="rt.quiet_h">In quiet mode Oswin does not start talking on its own — alerts arrive as notifications. Alarms and timers still ring.</small></div>
         </section>
 
         <section class="tab" data-tab="proactive">
@@ -290,7 +290,7 @@
         </section>
 
         <section class="tab" data-tab="games">
-          <p class="hint" data-i18n="gm.h">Say “watch my screen” or “follow my game” — Sayro sees your screen for the whole conversation and helps as you go: in games, code or homework (with the Tutor personality — step by step).</p>
+          <p class="hint" data-i18n="gm.h">Say “watch my screen” or “follow my game” — Oswin sees your screen for the whole conversation and helps as you go: in games, code or homework (with the Tutor personality — step by step).</p>
           <div class="hrow"><button class="btn primary" id="watchOn" data-i18n="gm.start">Start seeing my screen</button></div>
           <label class="fld"><span><span data-i18n="gm.interval">A screen frame every, s</span> <em id="v_watch_interval"></em></span><input type="range" id="s_watch_interval" min="1" max="6" step="0.5">
             <small data-i18n="gm.interval_h">More often — reacts faster, but uses more of your AI quota.</small></label>
@@ -322,7 +322,7 @@
         </section>
 
         <section class="tab" data-tab="apps">
-          <p class="hint"><span data-i18n="ap.h1">Sayro finds apps from the Start menu by itself</span> (<b id="appsCount">0</b>). <span data-i18n="ap.h2">If it can't find something, add your own name and a path to an .exe, shortcut, folder or website.</span></p>
+          <p class="hint"><span data-i18n="ap.h1">Oswin finds apps from the Start menu by itself</span> (<b id="appsCount">0</b>). <span data-i18n="ap.h2">If it can't find something, add your own name and a path to an .exe, shortcut, folder or website.</span></p>
           <div id="appsTable" class="apps-table"></div>
           <button class="btn" id="appAdd" data-i18n="ap.add">+ Add</button>
           <label class="fld"><span data-i18n="ap.test">Check what opens for a name</span>
@@ -330,7 +330,7 @@
         </section>
 
         <section class="tab" data-tab="memory">
-          <div class="fld"><span data-i18n="mem.title">What Sayro remembers about you</span><div class="list group" id="memList"></div>
+          <div class="fld"><span data-i18n="mem.title">What Oswin remembers about you</span><div class="list group" id="memList"></div>
             <div class="hrow"><input id="memNew" data-i18n-ph="mem.add_ph" placeholder="Add a fact, e.g. “classes on Tuesdays at 8”"><button class="btn" id="memAdd">+</button></div></div>
           <div class="fld"><span data-i18n="mem.notes">Notes</span><div class="list group" id="noteList"></div></div>
           <div class="hrow"><button class="btn danger" id="memClear" data-i18n="mem.clear">Forget everything about me</button><button class="btn" id="histClear" data-i18n="mem.hist">Clear conversation history</button></div>
@@ -343,8 +343,8 @@
           <div class="hrow"><button class="btn" id="onbAgain" data-i18n="ai.wizard">Open the setup assistant</button></div>
           <label class="fld"><span data-i18n="ai.live">Voice model (Live)</span><select id="s_live_model"></select></label>
           <label class="fld"><span data-i18n="ai.text">Model for vision and search</span><select id="s_text_model"></select></label>
-          <p class="hint" data-i18n="ai.auto_h">“Auto” — Sayro picks the best available model and switches if one is overloaded.</p>
-          <p class="hint" data-i18n="ai.privacy">Your voice, screen frames and messages go straight from your PC to Google Gemini under your own key. Sayro has no servers and does not see your data.</p>
+          <p class="hint" data-i18n="ai.auto_h">“Auto” — Oswin picks the best available model and switches if one is overloaded.</p>
+          <p class="hint" data-i18n="ai.privacy">Your voice, screen frames and messages go straight from your PC to Google Gemini under your own key. Oswin has no servers and does not see your data.</p>
         </section>
 
         <section class="tab" data-tab="diag">
@@ -354,7 +354,7 @@
             <div class="hrow wrap"><button class="btn" id="updCheck" data-i18n="up.check">Check for updates</button>
               <button class="btn primary hidden" id="updInstall" data-i18n="up.install">Update</button></div>
             <label class="tgl"><span data-i18n="up.auto">Check for updates automatically</span><input type="checkbox" id="s_update_auto_check"><i></i></label>
-            <small class="mut" data-i18n="up.safe">Your settings, keys and memory are never touched. A copy of the old version is kept, and if the new one fails to start, Sayro rolls back by itself.</small>
+            <small class="mut" data-i18n="up.safe">Your settings, keys and memory are never touched. A copy of the old version is kept, and if the new one fails to start, Oswin rolls back by itself.</small>
           </div>
           <div class="info" id="sInfo"></div>
           <div class="hrow wrap">
@@ -364,7 +364,7 @@
             <button class="btn" data-open="folder" data-i18n="dg.folder">App folder</button>
             <button class="btn" data-open="screenshots" data-i18n="dg.shots">Screenshots</button>
             <button class="btn" id="dRestart" data-i18n="dg.restart">Restart</button>
-            <button class="btn danger" id="dQuit" data-i18n="dg.quit">Quit Sayro</button>
+            <button class="btn danger" id="dQuit" data-i18n="dg.quit">Quit Oswin</button>
           </div>
           <pre class="console" id="dOut"></pre>
         </section>

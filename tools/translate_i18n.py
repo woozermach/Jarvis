@@ -18,13 +18,13 @@ from core.gemini import Gemini  # noqa: E402
 LANG_NAMES = {"de": "German", "fr": "French", "es": "Spanish (Spain)", "it": "Italian", "pl": "Polish", "cs": "Czech",
               "sk": "Slovak", "uk": "Ukrainian", "ru": "Russian"}
 I18N = BASE / "ui" / "i18n"
-RULES = """You translate the user interface of "Sayro", a voice AI assistant app for Windows PCs, from English into {lang}.
+RULES = """You translate the user interface of "Oswin", a voice AI assistant app for Windows PCs, from English into {lang}.
 Rules:
 - Return ONLY a JSON object with exactly the same keys and the translated strings as values.
-- Keep {{placeholders}} like {{name}}, {{v}}, {{s}} exactly as they are. Keep emoji, symbols (→ ✓ ⚠ ⬆ ·), keyboard names (Ctrl+Alt+J, Win+Alt+G), URLs and product names (Sayro, Google, Gemini, Telegram, Discord, Steam, NVIDIA, Xbox Game Bar, Windows) unchanged.
+- Keep {{placeholders}} like {{name}}, {{v}}, {{s}} exactly as they are. Keep emoji, symbols (→ ✓ ⚠ ⬆ ·), keyboard names (Ctrl+Alt+J, Win+Alt+G), URLs and product names (Oswin, Google, Gemini, Telegram, Discord, Steam, NVIDIA, Xbox Game Bar, Windows) unchanged.
 - Keep the “|” separators and the line numbering in multi-step strings.
 - Use the natural, concise tone Apple uses in its software in {lang}. Buttons are short. Keep quotes as typographic quotes of {lang}.
-- Phrases in quotes are examples of what the user SAYS to the assistant: translate them as natural spoken commands in {lang}, and translate the wake phrase “Hey Sayro” naturally (e.g. German “Hey Sayro”, Russian «Эй, Сайро»).
+- Phrases in quotes are examples of what the user SAYS to the assistant: translate them as natural spoken commands in {lang}, and translate the wake phrase “Hey Oswin” naturally (e.g. German “Hey Oswin”, Russian «Эй, Освин»).
 - Keys starting with "tool." are short lowercase status labels shown while the assistant works (e.g. "searching the web").
 - Keys starting with "py." are notifications; "\\n" are line breaks — keep them."""
 

@@ -38,7 +38,7 @@ def _close_legacy_windows():
         if n:
             b = ctypes.create_unicode_buffer(n + 1)
             u.GetWindowTextW(h, b, n + 1)
-            if b.value.startswith("J.A.R.V.I.S"):
+            if b.value.startswith("J.A.R.V.I.S"):  # «Sayro» (3.0) умеет перезагружаться сам — его не трогаем
                 found.append(h)
         return True
     u.EnumWindows(PROC(cb), 0)
@@ -85,8 +85,8 @@ def _find_hwnd():
         if n:
             b = ctypes.create_unicode_buffer(n + 1)
             u.GetWindowTextW(h, b, n + 1)
-            from .brand import WINDOW_TITLE
-            if b.value.startswith(WINDOW_TITLE) or b.value.startswith("J.A.R.V.I.S"):
+            from .brand import WINDOW_TITLE, LEGACY_TITLES
+            if b.value.startswith(WINDOW_TITLE) or b.value.startswith(LEGACY_TITLES):
                 found.append(h)
         return True
     u.EnumWindows(PROC(cb), 0)
@@ -199,10 +199,12 @@ def set_autostart(enabled: bool):
         return False
     from .brand import NAME
     lnk = _startup_dir() / f"{NAME}.lnk"
-    try:  # ярлык старого имени
-        (_startup_dir() / "J.A.R.V.I.S..lnk").unlink()
-    except OSError:
-        pass
+    from .brand import LEGACY_NAMES
+    for old in LEGACY_NAMES:  # ярлыки прежних имён
+        try:
+            (_startup_dir() / f"{old}.lnk").unlink()
+        except OSError:
+            pass
     if not enabled:
         try:
             lnk.unlink()
@@ -220,7 +222,8 @@ def set_autostart(enabled: bool):
 def autostart_enabled():
     try:
         from .brand import NAME
-        return (_startup_dir() / f"{NAME}.lnk").exists() or (_startup_dir() / "J.A.R.V.I.S..lnk").exists()
+        from .brand import LEGACY_NAMES
+        return any((_startup_dir() / f"{n}.lnk").exists() for n in (NAME,) + LEGACY_NAMES)
     except Exception:
         return False
 

@@ -69,7 +69,7 @@ DEFAULTS = {
     "ui_language": "",           # en de fr es it pl cs sk uk ru; пусто — язык Windows
     "theme": "dark",             # system | light | dark
     "onboarding_done": False,
-    "wake_word": "sayro",        # sayro | jarvis
+    "wake_word": "oswin",        # oswin | jarvis
     # активация
     "wake_engine": "auto",       # auto | openwakeword | google | off
     "wake_threshold": 0.5,       # уверенное срабатывание локальной модели
@@ -132,7 +132,7 @@ SCHEMA = {
     "wake_engine": ("choice", ["auto", "openwakeword", "google", "off"]),
     "ui_language": ("choice", ["en", "de", "fr", "es", "it", "pl", "cs", "sk", "uk", "ru"]),
     "theme": ("choice", ["system", "light", "dark"]), "onboarding_done": ("bool",),
-    "wake_word": ("choice", ["sayro", "jarvis"]),
+    "wake_word": ("choice", ["oswin", "jarvis"]),
     "custom_instructions": ("str", 4000), "user_name": ("str", 60), "city": ("str", 80), "hotkey": ("str", 40),
     "live_model": ("str", 80), "text_model": ("str", 80), "tts_model": ("str", 80), "accent": ("str", 9),
     "wake_threshold": ("float", 0.1, 0.95), "wake_verify_threshold": ("float", 0.0, 0.3),
@@ -222,6 +222,8 @@ class Config(dict):
                 self["onboarding_done"] = True
         if (self.get("accent") or "").lower() == "#4fe3ff":
             self["accent"] = DEFAULTS["accent"]
+        if self.get("wake_word") == "sayro":  # бренд 3.0 → Oswin (3.1)
+            self["wake_word"] = "oswin"
         if self.get("update_repo") in ("woozermach/jarvis-assistant", ""):  # первое имя репозитория
             self["update_repo"] = DEFAULTS["update_repo"]
         if not self.get("gemini_api_key") and os.environ.get("GEMINI_API_KEY"):

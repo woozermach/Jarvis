@@ -60,7 +60,7 @@ class Wake:
         self.verify_ok = False
         self.stats = {"fast": 0, "verified": 0, "rejected": 0}
 
-        self.word = cfg.get("wake_word", "sayro")
+        self.word = cfg.get("wake_word", "oswin")
         self.rx = wake_re(self.word)
         self.strip = strip_re(self.rx)
         eng = cfg.get("wake_engine", "auto")

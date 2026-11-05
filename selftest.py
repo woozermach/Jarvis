@@ -249,7 +249,7 @@ def t_cfg():
         pass
     from core.assistant import build_prompt
     p = build_prompt({"user_name": "Арсений", "persona": "friend", "reply_length": "detailed", "custom_instructions": "Шути"}, "сейчас")
-    return "Арсений" in p and "Шути" in p and "thoroughly" in p and "Sayro" in p, f"prompt {len(p)} симв."
+    return "Арсений" in p and "Шути" in p and "thoroughly" in p and "Oswin" in p, f"prompt {len(p)} симв."
 
 
 @step("режимы: создать → запустить → удалить")
@@ -594,15 +594,39 @@ def main():
         tb.t_routine_delete("Самотест два")
         ctx.store.cancel_timer(label="провер")
         return
+    if ONLY == "wake2" and (BASE / "data" / "test" / "names.json").exists():
+        # подбор имени: как распознавание слышит кандидатов (TTS → STT на разных языках)
+        t_models()
+        from core.stt import transcribe
+        from core.audio import resample
+        import numpy as np
+        names = json.loads((BASE / "data" / "test" / "names.json").read_text(encoding="utf-8"))
+        for n in names:
+            for phrase, langs in [(f"Hey {n['en']}, what time is it?", ["en-US", "de-DE", "es-ES"]),
+                                  (f"Эй, {n['ru']}, который час?", ["ru-RU", "uk-UA"]),
+                                  (f"Hej {n['en']}, która godzina?", ["pl-PL", "cs-CZ", "sk-SK"])]:
+                r = None
+                for _ in range(3):
+                    r = G.tts(phrase, cfg.get("voice", "Charon"))
+                    if r:
+                        break
+                    time.sleep(20)
+                if not r:
+                    rec(f"name {n['en']} tts", False, phrase)
+                    continue
+                pcm = resample(np.frombuffer(r[0], dtype=np.int16), r[1], 16000).astype(np.int16).tobytes()
+                out = [f"{l}: «{transcribe(pcm, '', l)}»" for l in langs]
+                rec(f"name {n['en']} | {phrase}", True, " | ".join(out))
+        return
     if ONLY == "wake2":
         t_models()
         from core.brand import wake_re
         from core.stt import transcribe
         from core.audio import resample
         import numpy as np
-        rx = wake_re("sayro")
-        for phrase, lang in [("Эй, Сайро, который час?", "ru-RU"), ("Сайро, открой стим", "ru-RU"), ("Hey Sayro, what time is it?", "en-US"),
-                             ("Hallo Sayro, wie spät ist es?", "de-DE"), ("Hej Sayro, która godzina?", "pl-PL")]:
+        rx = wake_re("oswin")
+        for phrase, lang in [("Эй, Освин, который час?", "ru-RU"), ("Освин, открой стим", "ru-RU"), ("Hey Oswin, what time is it?", "en-US"),
+                             ("Hallo Oswin, wie spät ist es?", "de-DE"), ("Hej Oswin, która godzina?", "pl-PL")]:
             r = G.tts(phrase, cfg.get("voice", "Charon"))
             if not r:
                 rec("wake2 tts " + phrase, False, "нет TTS")
@@ -611,7 +635,7 @@ def main():
             t1 = transcribe(pcm, "", lang)
             t2 = transcribe(pcm, "", "en-US") if not rx.search(t1 or "") else ""
             ok = bool(rx.search(t1 or "") or rx.search(t2 or ""))
-            rec(f"«Сайро» в речи: {phrase}", ok, f"{lang}: «{t1}»" + (f" | en-US: «{t2}»" if t2 else ""))
+            rec(f"«Oswin» в речи: {phrase}", ok, f"{lang}: «{t1}»" + (f" | en-US: «{t2}»" if t2 else ""))
         return
     if ONLY == "i18n":
         import runpy

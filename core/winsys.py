@@ -393,6 +393,7 @@ KNOWN_FOLDERS = {
     "Pictures": "{33E28130-4E1E-4676-835A-98395C3BC3BB}",
     "Music": "{4BD8D571-6D19-48D3-BE97-422220080E43}",
     "Videos": "{18989B1D-99B5-455B-841C-AB7C74E4DDFC}",
+    "Programs": "{A77F5D77-2E2B-44C3-A6A2-ABA601054A51}",   # меню «Пуск» → Программы
 }
 
 

@@ -1,4 +1,4 @@
-/* Sayro — интерфейс. Протокол с ядром: WebSocket /ws (см. core/assistant.py handle_ui / broadcast). */
+/* Oswin — интерфейс. Протокол с ядром: WebSocket /ws (см. core/assistant.py handle_ui / broadcast). */
 "use strict";
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -24,22 +24,22 @@ const STR = {
   "settings.dirty": "Unsaved changes", "hk.info": "Click the field and press a shortcut (e.g. Ctrl+Alt+J).",
   "hk.busy": "⚠ This shortcut is taken by another app — choose another.", "hk.need_mod": "Use at least one of Ctrl, Alt, Shift or Win.",
   "hk.rec": "press a shortcut…", "hs.headset": "— now: headset {name}, you can interrupt", "hs.speakers": "— now: speakers, interrupt with “Hey {brand}”",
-  "default_device": "Windows default", "auto": "Auto", "key.saved": "Saved key {k}", "key.none": "No key yet — Sayro cannot talk.",
+  "default_device": "Windows default", "auto": "Auto", "key.saved": "Saved key {k}", "key.none": "No key yet — Oswin cannot talk.",
   "apps.found": "→ opens “{app}” ({p}% sure)", "apps.notfound": "→ not found. Add the app in the table above.",
   "apps.name_ph": "name (as you say it)", "apps.path_ph": "C:\\path\\to\\app.exe or https://site",
   "rt.run": "Run", "rt.del_q": "Delete this routine?", "rt.need": "A name and at least one step are needed",
   "quiet.on": "on until {t}", "quiet.off": "off",
   "tg.off": "The bot is off.", "tg.connecting": "Connecting to Telegram…",
-  "tg.pair": "Bot @{bot} is online. Open t.me/{bot} and send this code:", "tg.ok": "✅ Bot @{bot} is linked to your phone. Message it — Sayro will answer.",
+  "tg.pair": "Bot @{bot} is online. Open t.me/{bot} and send this code:", "tg.ok": "✅ Bot @{bot} is linked to your phone. Message it — Oswin will answer.",
   "tg.unlink_q": "Unlink the phone? The bot stops answering until you send a new code.",
   "pro.active": "Pro is active", "pro.trial": "Pro trial — {d} days left", "pro.free": "Free version",
   "pro.until": " · until {d}", "pro.by_gumroad": " · subscription", "pro.by_key": " · personal key", "pro.lic": "License: {n}",
   "pro.free_sub": "The essentials are free forever. Pro adds what's on the right.", "pro.trial_sub": "All Pro features are unlocked during the trial.",
-  "pro.key_saved": "Key saved.", "pro.checking": "Checking…", "pro.del_q": "Remove the key? Sayro will become the free version.",
+  "pro.key_saved": "Key saved.", "pro.checking": "Checking…", "pro.del_q": "Remove the key? Oswin will become the free version.",
   "up.version": "Version {v}", "up.available": "— {v} available ({d})", "up.latest": "— up to date (checked at {t})", "up.checking": "— checking…",
-  "up.whats_new": "What's new in {v}:", "up.confirm": "Update Sayro to version {v}?\n\nIt restarts for about half a minute. Settings and memory are kept.",
+  "up.whats_new": "What's new in {v}:", "up.confirm": "Update Oswin to version {v}?\n\nIt restarts for about half a minute. Settings and memory are kept.",
   "up.updating": "Updating…",
-  "mem.clear_q": "Sayro will forget every fact about you. Continue?", "quit_q": "Quit Sayro completely (it will stop listening)?",
+  "mem.clear_q": "Oswin will forget every fact about you. Continue?", "quit_q": "Quit Oswin completely (it will stop listening)?",
   "info.voice": "Voice model:", "info.text": "Vision/search:", "info.wake": "Wake word:", "info.mic": "Microphone:", "info.spk": "Speakers:",
   "info.apps": "Apps / files:", "info.autostart": "Start with Windows:", "info.err": "Error:", "info.addr": "Interface:",
   "info.none_mic": "NOT FOUND", "info.on": "on", "info.off": "off",
@@ -56,7 +56,7 @@ const STR = {
   "tg_group.organizer": "Tasks, notes, memory", "tg_group.power": "Power and recycle bin", "tg_group.routines": "Routines and quiet mode",
   "tg_group.gaming": "Games: clips and Discord", "tg_group.update": "Self-update",
   "btn.mic": "Microphone", "btn.settings": "Settings", "btn.stop": "Stop", "btn.send": "Send", "btn.close": "Close",
-  "orb.click": "Click to talk", "flag.watch_off": "Sayro sees your screen — click to stop", "flag.quiet_off": "Quiet mode — click to turn off",
+  "orb.click": "Click to talk", "flag.watch_off": "Oswin sees your screen — click to stop", "flag.quiet_off": "Quiet mode — click to turn off",
   "flag.game_hint": "The GPU is busy — looks like a game",
   "wx.0": "clear", "wx.1": "mostly clear", "wx.2": "partly cloudy", "wx.3": "overcast", "wx.45": "fog", "wx.48": "rime fog",
   "wx.51": "light drizzle", "wx.53": "drizzle", "wx.55": "heavy drizzle", "wx.56": "freezing drizzle", "wx.57": "freezing drizzle",
@@ -99,7 +99,7 @@ const STEP_TPL = {
 const ACCENTS = ["#0A84FF", "#5E5CE6", "#BF5AF2", "#FF375F", "#FF453A", "#FF9F0A", "#30D158", "#64D2FF"];
 
 const S = { state: "boot", detail: "", lvlIn: 0, lvlOut: 0, wake: 0, settings: null, store: { timers: [], tasks: [], notes: [], memory: [], routines: [] },
-  msgs: new Map(), mic: true, booted: false, ws: null, wsOk: false, brand: "Sayro", pro: false, update: null, onbShown: false };
+  msgs: new Map(), mic: true, booted: false, ws: null, wsOk: false, brand: "Oswin", pro: false, update: null, onbShown: false };
 
 /* ───────────── WebSocket ───────────── */
 function connect() {
@@ -428,7 +428,7 @@ function applySettings(st) {
   if (!st) return;
   S.settings = st;
   const c = st.config;
-  S.brand = st.brand || "Sayro";
+  S.brand = st.brand || "Oswin";
   $("#brandName").textContent = S.brand;  // заголовок окна не трогаем: по нему ядро находит окно
   applyAccent(c.accent); applyTheme(c.theme);
   document.body.classList.toggle("no-sys", c.show_system_panel === false);

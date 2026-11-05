@@ -1,6 +1,6 @@
 name: Installer
 
-# Собирает SayroSetup.exe (Python 3.13 + все библиотеки + модели внутри) и выкладывает в Releases.
+# Собирает OswinSetup.exe (Python 3.13 + все библиотеки + модели внутри) и выкладывает в Releases.
 # Запускается при изменении VERSION в main или вручную (Actions → Installer → Run workflow).
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         run: |
           $ver = (Get-Content VERSION -Raw).Trim()
           "ver=$ver" >> $env:GITHUB_OUTPUT
-          Write-Host "Sayro $ver"
+          Write-Host "Oswin $ver"
 
       - name: Stage app files
         shell: pwsh
@@ -73,16 +73,16 @@ jobs:
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
           python installer\gen_languages.py "${env:ProgramFiles(x86)}\Inno Setup 6"
-          & $iscc /Qp "/DAppVersion=${{ steps.v.outputs.ver }}" installer\sayro.iss
+          & $iscc /Qp "/DAppVersion=${{ steps.v.outputs.ver }}" installer\oswin.iss
           if ($LASTEXITCODE -ne 0) { exit 1 }
-          Copy-Item build\out\SayroSetup.exe "build\out\SayroSetup-${{ steps.v.outputs.ver }}.exe"
+          Copy-Item build\out\OswinSetup.exe "build\out\OswinSetup-${{ steps.v.outputs.ver }}.exe"
           Get-ChildItem build\out | Format-Table Name, Length
 
       - name: Test install / uninstall
         shell: pwsh
         run: |
-          $d = "$env:RUNNER_TEMP\SayroTest"
-          Start-Process build\out\SayroSetup.exe -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$d","/TASKS=" -Wait
+          $d = "$env:RUNNER_TEMP\OswinTest"
+          Start-Process build\out\OswinSetup.exe -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$d","/TASKS=" -Wait
           if (-not (Test-Path "$d\.venv\Scripts\pythonw.exe")) { Write-Error "not installed"; exit 1 }
           & "$d\.venv\Scripts\python.exe" -c "import sys;sys.path.insert(0,r'$d');import core.assistant;print('installed ok')"
           if ($LASTEXITCODE -ne 0) { exit 1 }
@@ -93,8 +93,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SayroSetup-${{ steps.v.outputs.ver }}
-          path: build/out/SayroSetup.exe
+          name: OswinSetup-${{ steps.v.outputs.ver }}
+          path: build/out/OswinSetup.exe
 
       - name: Release
         env:
@@ -102,10 +102,10 @@ jobs:
         shell: pwsh
         run: |
           $ver = "${{ steps.v.outputs.ver }}"
-          $notes = "Download **SayroSetup.exe** below and run it. Windows 10/11, no admin rights needed.`n`nWhat's new: see CHANGELOG.md"
+          $notes = "Download **OswinSetup.exe** below and run it. Windows 10/11, no admin rights needed.`n`nWhat's new: see CHANGELOG.md"
           gh release view "v$ver" 2>$null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload "v$ver" build\out\SayroSetup.exe "build\out\SayroSetup-$ver.exe" --clobber
+            gh release upload "v$ver" build\out\OswinSetup.exe "build\out\OswinSetup-$ver.exe" --clobber
           } else {
-            gh release create "v$ver" build\out\SayroSetup.exe "build\out\SayroSetup-$ver.exe" --title "Sayro $ver" --notes $notes --latest
+            gh release create "v$ver" build\out\OswinSetup.exe "build\out\OswinSetup-$ver.exe" --title "Oswin $ver" --notes $notes --latest
           }

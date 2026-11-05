@@ -1,6 +1,6 @@
-# Sayro — your voice for your PC
+# Oswin — your voice for your PC
 
-Sayro is a voice AI assistant for Windows. Say **“Hey Sayro”** and it opens apps, clicks buttons, sees your screen,
+Oswin is a voice AI assistant for Windows. Say **“Hey Oswin”** and it opens apps, clicks buttons, sees your screen,
 helps in games and homework, manages timers and tasks — in 10 languages.
 
 **Languages:** English · Deutsch · Français · Español · Italiano · Polski · Čeština · Slovenčina · Українська · Русский
@@ -22,22 +22,22 @@ helps in games and homework, manages timers and tasks — in 10 languages.
 | ⭐ From your phone | Telegram bot: text or voice — “what's on my screen?”, “shut down the PC” |
 | Games | “clip that” (NVIDIA / Xbox Game Bar), “mute me on Discord” |
 
-⭐ — **Sayro Pro**, $4.99/month. Everything else is free forever. Every install starts with **7 days of Pro**.
+⭐ — **Oswin Pro**, $4.99/month. Everything else is free forever. Every install starts with **7 days of Pro**.
 
 ## Your AI, your key
 
-Sayro talks to **Google Gemini** directly from your PC under your own key — there are no Sayro servers and we never see your
+Oswin talks to **Google Gemini** directly from your PC under your own key — there are no Oswin servers and we never see your
 voice, screen or messages. On first launch the setup assistant helps you connect:
 
 - **Google AI Pro subscribers** — use the monthly Google Cloud credits included in the subscription.
 - **Your own Gemini API key** — pay Google for what you use (roughly $1 per hour of talking).
-- **Sayro Cloud** — all-inclusive subscription, coming soon.
+- **Oswin Cloud** — all-inclusive subscription, coming soon.
 
 ## Install
 
 Windows 10/11, no admin rights needed.
 
-**[⬇ Download SayroSetup.exe](https://github.com/woozermach/Jarvis/releases/latest/download/SayroSetup.exe)** (≈64 MB, everything included), run it and follow the wizard.
+**[⬇ Download OswinSetup.exe](https://github.com/woozermach/Jarvis/releases/latest/download/OswinSetup.exe)** (≈64 MB, everything included), run it and follow the wizard.
 
 If Windows shows *“Windows protected your PC”*, click **More info → Run anyway** (the installer is not code-signed yet).
 
@@ -47,7 +47,7 @@ Updates install with one click from the app (green button at the top).
 ## Privacy
 
 Audio, screen frames and messages are sent only to Google Gemini under your key (and short phrases to Google speech
-recognition to detect “Hey Sayro”). Settings, memory and history stay on your PC in the app folder.
+recognition to detect “Hey Oswin”). Settings, memory and history stay on your PC in the app folder.
 
 ---
 Made in Žilina, Slovakia. Issues and ideas: GitHub Issues.

@@ -1,4 +1,4 @@
-﻿; Установщик Sayro (Inno Setup 6). Собирается GitHub Actions: .github/workflows/installer.yml
+﻿; Установщик Oswin (Inno Setup 6). Собирается GitHub Actions: .github/workflows/installer.yml
 ; Внутри — готовый Python 3.13 со всеми библиотеками в .venv\Scripts (тот же путь, что у ручной установки,
 ; поэтому обновления, перезапуск и автозапуск работают без изменений). Ставится без прав администратора.
 
@@ -11,21 +11,21 @@
 
 [Setup]
 AppId={{7C2B1E54-5A0D-4F8B-9C51-3E2D6B8A9F10}
-AppName=Sayro
+AppName=Oswin
 AppVersion={#AppVersion}
-AppVerName=Sayro {#AppVersion}
-AppPublisher=Sayro
+AppVerName=Oswin {#AppVersion}
+AppPublisher=Oswin
 AppPublisherURL=https://github.com/woozermach/Jarvis
 AppSupportURL=https://github.com/woozermach/Jarvis/issues
-DefaultDirName={localappdata}\Programs\Sayro
+DefaultDirName={localappdata}\Programs\Oswin
 DisableProgramGroupPage=yes
 DisableDirPage=auto
 PrivilegesRequired=lowest
 OutputDir=..\build\out
-OutputBaseFilename=SayroSetup
+OutputBaseFilename=OswinSetup
 SetupIconFile=..\ui\jarvis.ico
 UninstallDisplayIcon={app}\ui\jarvis.ico
-UninstallDisplayName=Sayro
+UninstallDisplayName=Oswin
 WizardStyle=modern
 WizardSmallImageFile=small_55.bmp,small_64.bmp,small_83.bmp,small_110.bmp
 Compression=lzma2/max
@@ -42,8 +42,8 @@ UsePreviousTasks=yes
 #include "languages.iss"
 
 [CustomMessages]
-DeleteData=Also delete your Sayro settings and data (API key, notes, memory, history)?
-StartAfter=Start Sayro
+DeleteData=Also delete your Oswin settings and data (API key, notes, memory, history)?
+StartAfter=Start Oswin
 ; переводы этих двух строк — в installer/gen_languages.py (попадают в languages.iss)
 
 [Tasks]
@@ -53,18 +53,24 @@ Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm
 Source: "{#Src}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\Sayro"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Sayro voice assistant"
-Name: "{userdesktop}\Sayro"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Sayro voice assistant"; Tasks: desktopicon
+Name: "{userprograms}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"
+Name: "{userdesktop}\Oswin"; Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; Description: "{cm:StartAfter}"; Flags: nowait postinstall skipifsilent
 
+[InstallDelete]
+; ярлыки прежнего имени (Sayro, до 3.1)
+Type: files; Name: "{userprograms}\Sayro.lnk"
+Type: files; Name: "{userdesktop}\Sayro.lnk"
+
 [UninstallDelete]
+Type: files; Name: "{userstartup}\Oswin.lnk"
 Type: files; Name: "{userstartup}\Sayro.lnk"
 
 [Code]
-{ Останавливает только копию Sayro из этой папки (по полному пути к jarvis.py). }
-procedure StopSayro(Dir: String);
+{ Останавливает только копию Oswin из этой папки (по полному пути к jarvis.py). }
+procedure StopOswin(Dir: String);
 var
   Script, P: String;
   Rc: Integer;
@@ -73,7 +79,7 @@ begin
   StringChangeEx(P, '''', '''''', True);
   Script := ExpandConstant('{tmp}');
   if Script = '' then Script := GetTempDir();
-  Script := AddBackslash(Script) + 'sayro_stop.ps1';
+  Script := AddBackslash(Script) + 'oswin_stop.ps1';
   SaveStringToFile(Script,
     '$p = ''' + P + '''' + #13#10 +
     'Get-CimInstance Win32_Process -Filter "Name=''pythonw.exe'' OR Name=''python.exe''" | ' +
@@ -87,7 +93,7 @@ end;
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   if DirExists(ExpandConstant('{app}')) then
-    StopSayro(ExpandConstant('{app}'));
+    StopOswin(ExpandConstant('{app}'));
   Result := '';
 end;
 
@@ -124,7 +130,7 @@ var
   Keep: Boolean;
 begin
   if CurUninstallStep = usUninstall then
-    StopSayro(ExpandConstant('{app}'));
+    StopOswin(ExpandConstant('{app}'));
   if CurUninstallStep = usPostUninstall then
   begin
     Keep := True;

@@ -20,7 +20,7 @@ log = logging.getLogger("jarvis.license")
 
 PUBLIC_KEY = bytes.fromhex("1fc62c76483aad822d9c65791dddf2d01ce5e5e91021cd3d0915684a3f12a5d7")
 GUMROAD_PRODUCT_ID = "XEhiqBm-5-kv_5ifx13WZg=="
-BUY_URL = "https://minailove.gumroad.com/l/sayro-pro"
+BUY_URL = "https://minailove.gumroad.com/l/oswin-pro"
 RECHECK = 3 * 86400
 GRACE = 14 * 86400
 STATE = DATA_DIR / "license.json"
