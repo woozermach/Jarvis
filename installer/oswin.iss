@@ -53,11 +53,11 @@ Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm
 Source: "{#Src}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{userprograms}\Oswin"; Filename: "{app}\.venv\Scripts\Oswin.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"
-Name: "{userdesktop}\Oswin"; Filename: "{app}\.venv\Scripts\Oswin.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"; Tasks: desktopicon
+Name: "{userprograms}\Oswin"; Filename: "{app}\Oswin.exe"; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"
+Name: "{userdesktop}\Oswin"; Filename: "{app}\Oswin.exe"; WorkingDir: "{app}"; IconFilename: "{app}\ui\jarvis.ico"; Comment: "Oswin voice assistant"; AppUserModelID: "oswin.assistant"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\.venv\Scripts\Oswin.exe"; Parameters: """{app}\jarvis.py"""; WorkingDir: "{app}"; Description: "{cm:StartAfter}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\Oswin.exe"; WorkingDir: "{app}"; Description: "{cm:StartAfter}"; Flags: nowait postinstall skipifsilent
 
 [InstallDelete]
 ; ярлыки прежнего имени (Sayro, до 3.1)

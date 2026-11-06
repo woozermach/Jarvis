@@ -181,6 +181,8 @@ class Assistant:
 
         from .server import start_server
         self.port = await start_server(self)
+        from . import host
+        host.attach(self.loop, self.port)
 
         self.audio.start()
         self.wake = Wake(self.cfg, self._on_wake_thread)

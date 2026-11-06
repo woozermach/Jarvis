@@ -77,6 +77,9 @@ def prune(target: Path, keep: set):
 
 
 def start():
+    if (BASE / "Oswin.exe").exists():  # оболочка на Rust (3.3+) сама запустит ядро и окно
+        subprocess.Popen([str(BASE / "Oswin.exe")], cwd=str(BASE), creationflags=NO_WINDOW)
+        return
     s = BASE / ".venv" / "Scripts"
     pyw = next((p for p in (s / "Oswin.exe", s / "pythonw.exe") if p.exists()), Path(sys.executable))
     subprocess.Popen([str(pyw), str(BASE / "jarvis.py")], cwd=str(BASE), creationflags=NO_WINDOW)

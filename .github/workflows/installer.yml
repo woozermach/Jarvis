@@ -31,9 +31,21 @@ jobs:
         run: |
           $stage = "build\app"
           New-Item $stage -ItemType Directory -Force | Out-Null
-          robocopy . $stage /E /NFL /NDL /NJH /NJS /XD .git .github build data __pycache__ .venv py installer docs /XF config.json jarvis.log CLAUDE.local.md
+          robocopy . $stage /E /NFL /NDL /NJH /NJS /XD .git .github build data __pycache__ .venv py installer docs shell /XF config.json jarvis.log CLAUDE.local.md
           if ($LASTEXITCODE -ge 8) { exit 1 }
           exit 0
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: shell
+
+      - name: Build Oswin.exe (Rust)
+        shell: pwsh
+        run: |
+          cargo build --release --manifest-path shell\Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Copy-Item shell\target\release\Oswin.exe build\app\Oswin.exe
+          "Oswin.exe {0:N1} MB" -f ((Get-Item build\app\Oswin.exe).Length / 1MB)
 
       - name: Bundle Python 3.13
         shell: pwsh
@@ -51,8 +63,6 @@ jobs:
           & $py -m pip install --upgrade pip --no-warn-script-location --disable-pip-version-check
           & $py -m pip install -r requirements.txt --no-warn-script-location --disable-pip-version-check
           if ($LASTEXITCODE -ne 0) { exit 1 }
-          # Oswin.exe — та же подписанная pythonw.exe под нашим именем (ресурсы не трогаем, чтобы подпись осталась целой)
-          Copy-Item build\app\.venv\Scripts\pythonw.exe build\app\.venv\Scripts\Oswin.exe
 
       - name: Wake-word models
         shell: pwsh
@@ -85,19 +95,12 @@ jobs:
         run: |
           $d = "$env:RUNNER_TEMP\OswinTest"
           Start-Process build\out\OswinSetup.exe -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$d","/TASKS=" -Wait
-          if (-not (Test-Path "$d\.venv\Scripts\Oswin.exe")) { Write-Error "not installed"; exit 1 }
+          if (-not (Test-Path "$d\Oswin.exe")) { Write-Error "not installed"; exit 1 }
           & "$d\.venv\Scripts\python.exe" -c "import sys;sys.path.insert(0,r'$d');import core.assistant;print('installed ok')"
           if ($LASTEXITCODE -ne 0) { exit 1 }
-          # окно WebView2: должно появиться окно «Oswin» процесса pythonw
-          $w = Start-Process "$d\.venv\Scripts\Oswin.exe" -ArgumentList "`"$d\core\window.py`"","about:blank" -WorkingDirectory $d -PassThru
-          $ok = $false
-          for ($i = 0; $i -lt 40 -and -not $ok; $i++) { Start-Sleep 1; $ok = [bool](Get-Process -Id $w.Id -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq "Oswin" }) }
-          Get-Content "$d\data\window.log" -ErrorAction SilentlyContinue
-          if (-not $ok) { Write-Error "WebView2 window did not appear"; exit 1 }
-          Start-Sleep 3
-          if (Select-String -Path "$d\data\window.log" -Pattern "WARNING" -Quiet) { Get-Content "$d\data\window.log"; Write-Error "window.py warnings"; exit 1 }
-          Write-Host "webview window ok"
-          Stop-Process -Id $w.Id -Force
+          # оболочка: окно, вторая копия, перезапуск ядра, выход
+          & "$d\.venv\Scripts\python.exe" installer\test_host.py $d
+          if ($LASTEXITCODE -ne 0) { exit 1 }
           Start-Process "$d\unins000.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES" -Wait
           for ($i = 0; $i -lt 60 -and (Test-Path "$d\core"); $i++) { Start-Sleep 1 }
           if (Test-Path "$d\core") { Write-Error "uninstall left files"; exit 1 }

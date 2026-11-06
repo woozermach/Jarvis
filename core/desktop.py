@@ -74,6 +74,10 @@ def open_window(port):
     """Окно интерфейса: WebView2 (core/window.py, отдельный процесс) или Edge, если так выбрано/не получилось."""
     global _proc
     url = f"http://127.0.0.1:{port}/"
+    from . import host
+    if host.ACTIVE:  # окном управляет оболочка Oswin.exe
+        host.request("show")
+        return
     if IS_WIN:
         _close_legacy_windows()
     if IS_WIN and _find_hwnd():  # окно уже открыто (например, после перезапуска) — просто показать
@@ -141,6 +145,10 @@ def minimize_window():
 
 
 def focus_window(port):
+    from . import host
+    if host.ACTIVE:
+        host.request("show")
+        return
     h = _find_hwnd()
     if h:
         u = ctypes.windll.user32
@@ -260,9 +268,12 @@ def set_autostart(enabled: bool):
         except FileNotFoundError:
             pass
         return True
-    pyw = _pythonw()
+    if (BASE / "Oswin.exe").exists():  # оболочка на Rust
+        target, args = BASE / "Oswin.exe", "--autostart"
+    else:
+        target, args = _pythonw(), f'\\"{BASE / "jarvis.py"}\\" --autostart'
     ps = (f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}');"
-          f"$s.TargetPath='{pyw}';$s.Arguments='\"{BASE / 'jarvis.py'}\" --autostart';"
+          f"$s.TargetPath='{target}';$s.Arguments='{args}';"
           f"$s.WorkingDirectory='{BASE}';$s.IconLocation='{BASE / 'ui' / 'jarvis.ico'}';$s.Save()")
     r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, timeout=30, creationflags=NO_WINDOW)
     return lnk.exists()
@@ -279,6 +290,9 @@ def autostart_enabled():
 
 def restart_jarvis():
     """Перезапуск: новый процесс стартует через 2 с (без cmd/timeout — никаких чёрных окон), текущий завершается."""
+    from . import host
+    if host.ACTIVE:  # перезапустит оболочка
+        host.restart()
     pyw = str(_pythonw())
     code = ("import time,subprocess,sys;time.sleep(2);"
             "subprocess.Popen([sys.argv[1],sys.argv[2]],cwd=sys.argv[3],creationflags=0x08000000)")

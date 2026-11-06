@@ -37,6 +37,13 @@ async def start_server(assistant):
         open_window(assistant.port)
         return web.json_response({"ok": True})
 
+    async def host_next(request):
+        from . import host
+        if not host.ACTIVE or request.query.get("token") != host.TOKEN:
+            raise web.HTTPForbidden()
+        cmd = await host.next_cmd()
+        return web.json_response({"cmd": cmd} if cmd else {})
+
     async def ws_handler(request):
         if request.remote not in ("127.0.0.1", "::1"):
             raise web.HTTPForbidden()
@@ -58,6 +65,7 @@ async def start_server(assistant):
     app.router.add_get("/", index)
     app.router.add_get("/ping", ping)
     app.router.add_post("/show", show)
+    app.router.add_get("/host/next", host_next)
     app.router.add_get("/ws", ws_handler)
     app.router.add_static("/ui/", UI, show_index=False)
     runner = web.AppRunner(app, access_log=None)
