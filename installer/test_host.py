@@ -4,6 +4,7 @@ python installer/test_host.py <папка установки>"""
 import asyncio
 import ctypes
 import json
+import os
 import subprocess
 import sys
 import time
@@ -100,7 +101,8 @@ try:
 except subprocess.TimeoutExpired:
     fail("Oswin.exe не завершился после выхода")
 time.sleep(2)
-left = [p.info for p in psutil.process_iter(["pid", "name", "exe"]) if str(D).lower() in str(p.info.get("exe") or "").lower()]
+left = [p.info for p in psutil.process_iter(["pid", "name", "exe"])
+        if p.pid != os.getpid() and str(D).lower() in str(p.info.get("exe") or "").lower()]
 if left:
     fail(f"остались процессы: {left}")
 print(LOG.read_text(encoding="utf-8"))
