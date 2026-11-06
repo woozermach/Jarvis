@@ -13,6 +13,7 @@ from pathlib import Path
 import aiohttp
 import psutil
 
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 D = Path(sys.argv[1])
 LOG = D / "data" / "host.log"
 
