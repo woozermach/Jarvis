@@ -23,7 +23,9 @@ SITE = "https://woozermach.github.io/Jarvis/"
 WAKE_WORDS = {
     # «Hey Oswin»: как его слышит распознаватель на разных языках (проверено TTS → STT, см. selftest --only wake2)
     "oswin": (r"\bos\s?wi?y?n\b|\boswyn\b|\bozwin\b|osborne?\b|\bosv[ií]n\b|\bosvin\b|\bos\s?vin\b|"
-              r"освин|освін|осв[иі]н|озвин|(?:эй|ей|гей|hey|hej|hi|hallo)[\s,]+ось\s?він"),
+              r"освин|освін|осв[иі]н|озвин|асвин|освен|(?:эй|ей|гей|hey|hej|hi|hallo)[\s,]+ось\s?він|"
+              # частые ошибки распознавания, но только с обращением или в начале фразы — иначе ложные срабатывания
+              r"(?:эй|ей|hey|hej|hi|ahoj|hallo)[\s,]+(?:austin|остин|oce[nń]|ocean|[oa][sz]\w{1,5}|[оа][сз]\w{1,5})\b|^\s*austin\b"),
     "jarvis": r"(?:дж|ж|ч|д)[аеэ]р?[вб][иы]с|jarvis|джарви",
 }
 

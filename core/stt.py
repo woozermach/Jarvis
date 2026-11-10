@@ -16,10 +16,13 @@ _KEY = "AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw"  # публичный ключ 
 _session = requests.Session()
 
 
-def google(pcm16k: bytes, lang="ru-RU", timeout=6) -> str:
-    r = _session.post(_URL, params={"output": "json", "lang": lang, "key": _KEY, "client": "chromium"},
+def google_all(pcm16k: bytes, lang="ru-RU", timeout=6) -> list:
+    """Все варианты распознавания (лучший первым): имя часто есть только во 2-3-м варианте."""
+    r = _session.post(_URL, params={"output": "json", "lang": lang, "key": _KEY, "client": "chromium",
+                                    "maxAlternatives": 5},
                       data=pcm16k, headers={"Content-Type": "audio/l16; rate=16000"}, timeout=timeout)
     r.raise_for_status()
+    out = []
     for line in r.text.splitlines():
         line = line.strip()
         if not line:
@@ -29,10 +32,16 @@ def google(pcm16k: bytes, lang="ru-RU", timeout=6) -> str:
         except Exception:
             continue
         for res in j.get("result", []):
-            alts = res.get("alternative") or []
-            if alts:
-                return alts[0].get("transcript", "")
-    return ""
+            for a in res.get("alternative") or []:
+                t = a.get("transcript", "")
+                if t and t not in out:
+                    out.append(t)
+    return out
+
+
+def google(pcm16k: bytes, lang="ru-RU", timeout=6) -> str:
+    alts = google_all(pcm16k, lang, timeout)
+    return alts[0] if alts else ""
 
 
 def wav_bytes(pcm16k: bytes) -> bytes:
@@ -51,6 +60,14 @@ def gemini(pcm16k: bytes, api_key: str, model="gemini-3.1-flash-lite", timeout=8
     r.raise_for_status()
     parts = r.json()["candidates"][0]["content"]["parts"]
     return " ".join(p.get("text", "") for p in parts if not p.get("thought")).strip()
+
+
+def transcribe_all(pcm16k: bytes, lang: str = "ru-RU") -> list:
+    try:
+        return google_all(pcm16k, lang)
+    except Exception as e:
+        log.debug("google stt: %s", e)
+        return []
 
 
 def transcribe(pcm16k: bytes, api_key: str = "", lang: str = "ru-RU") -> str:

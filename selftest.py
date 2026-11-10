@@ -669,10 +669,11 @@ def main():
                 rec("wake2 tts " + phrase, False, "нет TTS")
                 continue
             pcm = resample(np.frombuffer(r[0], dtype=np.int16), r[1], 16000).astype(np.int16).tobytes()
-            t1 = transcribe(pcm, "", lang)
-            t2 = transcribe(pcm, "", "en-US") if not rx.search(t1 or "") else ""
-            ok = bool(rx.search(t1 or "") or rx.search(t2 or ""))
-            rec(f"«Oswin» в речи: {phrase}", ok, f"{lang}: «{t1}»" + (f" | en-US: «{t2}»" if t2 else ""))
+            from core.stt import transcribe_all
+            a1 = transcribe_all(pcm, lang)  # так же, как Wake._verify_worker: все варианты + второй шанс en-US
+            a2 = transcribe_all(pcm, "en-US") if not any(rx.search(t) for t in a1) and lang != "en-US" else []
+            ok = any(rx.search(t) for t in a1 + a2)
+            rec(f"«Oswin» в речи: {phrase}", ok, f"{lang}: {a1}" + (f" | en-US: {a2}" if a2 else ""))
         return
     if ONLY == "i18n":
         import runpy

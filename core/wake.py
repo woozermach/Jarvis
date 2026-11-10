@@ -181,13 +181,13 @@ class Wake:
             pcm = self._q.get()
             self._busy = True
             try:
-                from .stt import transcribe
+                from .stt import transcribe_all
                 lang = self.cfg.get("ui_language") or "en"
-                text = transcribe(pcm, (self.cfg.get("gemini_api_key") or "").strip(), STT_LANG.get(lang, "en-US"))
-                if not (text and self.rx.search(text)) and lang != "en":
+                alts = transcribe_all(pcm, STT_LANG.get(lang, "en-US"))
+                if not any(self.rx.search(t) for t in alts) and lang != "en" and self.word != "jarvis":
                     # имя часто распознаётся как английское слово — второй шанс
-                    t2 = transcribe(pcm, "", "en-US") if self.word != "jarvis" else ""
-                    text = t2 if t2 and self.rx.search(t2) else text
+                    alts += transcribe_all(pcm, "en-US")
+                text = next((t for t in alts if self.rx.search(t)), alts[0] if alts else "")
             except Exception:
                 text = ""
             finally:
