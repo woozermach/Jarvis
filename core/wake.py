@@ -72,6 +72,11 @@ class Wake:
         self.strip = strip_re(self.rx)
         eng = cfg.get("wake_engine", "auto")
         self.model_file = _custom_model(self.word)
+        # модель «Hey Oswin» обучена на английском произношении: на ru/sk/de «Освин» она почти не срабатывает
+        # (см. CLAUDE.md), поэтому в режиме «авто» на других языках интерфейса имя слушает распознавание речи
+        if (self.model_file and eng == "auto" and self.word != "jarvis"
+                and (cfg.get("ui_language") or "en").split("-")[0] not in ("en", "pl")):
+            self.model_file = None
         if self.word != "jarvis" and not self.model_file and eng in ("auto", "openwakeword"):
             eng = "google"  # локальной модели для этого имени нет — только распознавание речи
         # пороги: для своей модели мгновенное срабатывание строже, а «похоже на имя» проверяется речью
