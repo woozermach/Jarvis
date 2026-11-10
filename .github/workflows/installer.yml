@@ -7,6 +7,11 @@ on:
     branches: [main]
     paths: [VERSION]
   workflow_dispatch:
+    inputs:
+      beta:
+        description: "Тестовая сборка: выложить как pre-release (с любой ветки)"
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -110,6 +115,17 @@ jobs:
         with:
           name: OswinSetup-${{ steps.v.outputs.ver }}
           path: build/out/OswinSetup.exe
+
+      - name: Beta pre-release
+        if: inputs.beta != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $tag = "v${{ steps.v.outputs.ver }}-${{ inputs.beta }}"
+          Copy-Item build\out\OswinSetup.exe "build\out\OswinSetup-beta.exe"
+          gh release delete $tag --yes --cleanup-tag 2>$null
+          gh release create $tag "build\out\OswinSetup-beta.exe" --title "Oswin ${{ steps.v.outputs.ver }} ${{ inputs.beta }} (test)" --notes "Test build from branch ${{ github.ref_name }}. Not for general use." --prerelease --target ${{ github.sha }}
 
       - name: Release
         if: github.ref == 'refs/heads/main'
